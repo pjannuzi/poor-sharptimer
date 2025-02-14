@@ -1579,12 +1579,13 @@ namespace SharpTimer
             string rotationString = $"{currentRotation.X} {currentRotation.Y} {currentRotation.Z}";
             string speedString = $"{currentSpeed.X} {currentSpeed.Y} {currentSpeed.Z}";
 
-            // Add the current position and rotation strings to the player's checkpoint list
+            // Ensure player's checkpoint list exists
             if (!playerCheckpoints.ContainsKey(player.Slot))
             {
                 playerCheckpoints[player.Slot] = [];
             }
 
+            // Add the new checkpoint
             playerCheckpoints[player.Slot].Add(new PlayerCheckpoint
             {
                 PositionString = positionString,
@@ -1592,8 +1593,9 @@ namespace SharpTimer
                 SpeedString = speedString
             });
 
-            // Get the count of checkpoints for this player
+            // Always set the new checkpoint as the selected one
             int checkpointCount = playerCheckpoints[player.Slot].Count;
+            playerTimers[player.Slot].CheckpointIndex = checkpointCount - 1;
 
             // Print the chat message with the checkpoint count
             PrintToChat(player, Localizer["checkpoint_set", (currentMapName!.Contains("surf_") ? "loc" : "checkpoint"), checkpointCount]);
@@ -1638,15 +1640,16 @@ namespace SharpTimer
 
             if (jumpStatsEnabled) InvalidateJS(player.Slot);
 
-            // Get the most recent checkpoint from the player's list
-            PlayerCheckpoint lastCheckpoint = playerCheckpoints[player.Slot].Last();
+            int index = playerTimers.TryGetValue(player.Slot, out var timer) ? timer.CheckpointIndex : playerCheckpoints[player.Slot].Count - 1;
 
-            // Convert position and rotation strings to Vector and QAngle
-            Vector position = ParseVector(lastCheckpoint.PositionString ?? "0 0 0");
-            QAngle rotation = ParseQAngle(lastCheckpoint.RotationString ?? "0 0 0");
-            Vector speed = ParseVector(lastCheckpoint.SpeedString ?? "0 0 0");
+            index = Math.Clamp(index, 0, playerCheckpoints[player.Slot].Count - 1);
 
-            // Teleport the player to the most recent checkpoint, including the saved rotation
+            PlayerCheckpoint selectedCheckpoint = playerCheckpoints[player.Slot][index];
+
+            Vector position = ParseVector(selectedCheckpoint.PositionString ?? "0 0 0");
+            QAngle rotation = ParseQAngle(selectedCheckpoint.RotationString ?? "0 0 0");
+            Vector speed = ParseVector(selectedCheckpoint.SpeedString ?? "0 0 0");
+
             if (removeCpRestrictEnabled == true)
             {
                 player.PlayerPawn.Value!.Teleport(position, rotation, speed);
@@ -1656,7 +1659,6 @@ namespace SharpTimer
                 player.PlayerPawn.Value!.Teleport(position, rotation, new Vector(0, 0, 0));
             }
 
-            // Play a sound or provide feedback to the player
             PlaySound(player, tpSound);
             PrintToChat(player, Localizer["used_recent_checkpoint", (currentMapName!.Contains("surf_") ? "loc" : "checkpoint")]);
             SharpTimerDebug($"{player.PlayerName} css_tp to {position} {rotation} {speed}");
