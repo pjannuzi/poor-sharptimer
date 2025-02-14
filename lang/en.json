@@ -9,6 +9,7 @@
   "timer_disabled": "Timer: {red}Disabled",
   "timer_cancelled": "Timer cancelled due to illegal skip attempt",
   "timer_reset": "You got reset due to illegal skip attempt",
+  "timer_prestrafe": "Prestrafe: {lime}{0}{default}",
 
   //records
   "no_records_available": "No records available for {0}",
