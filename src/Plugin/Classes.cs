@@ -153,6 +153,7 @@ namespace SharpTimer
         public bool HideTimerHud { get; set; }
         public bool HideKeys { get; set; }
         public bool SoundsEnabled { get; set; }
+        public bool Prestrafe { get; set; }
         public bool BindsDisabled { get; set; }
         public bool HideJumpStats { get; set; }
         public int PlayerFov { get; set; }

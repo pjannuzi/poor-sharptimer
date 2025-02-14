@@ -38,6 +38,17 @@ namespace SharpTimer
                 playerTimers[player!.Slot].IsTimerRunning = true;
                 playerTimers[player!.Slot].IsBonusTimerRunning = false;
             }
+            Vector playerSpeed = player.PlayerPawn!.Value!.AbsVelocity;
+            string formattedPlayerVel = Math.Round(use2DSpeed ? playerSpeed.Length2D()
+                                                                        : playerSpeed.Length())
+                                                                        .ToString("000");
+            var playerSlot = player.Slot;
+
+            if (playerTimers[playerSlot].Prestrafe)
+            {
+                PrintToChat(player, Localizer["timer_prestrafe", formattedPlayerVel]);
+            }
+            
 
             playerCheckpoints.Remove(player!.Slot);
             playerTimers[player!.Slot].TimerTicks = 0;

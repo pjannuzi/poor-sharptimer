@@ -1395,6 +1395,42 @@ namespace SharpTimer
             }
         }
 
+        [ConsoleCommand("css_prestrafe", "Toggle Prestrafe")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void TogglePrestrafe(CCSPlayerController? player, CommandInfo command)
+        {
+             if (!IsAllowedPlayer(player))
+            {
+                if (!IsAllowedSpectator(player))
+                    return;
+            }
+
+            var playerName = player!.PlayerName;
+            var playerSlot = player.Slot;
+            var steamID = player.SteamID.ToString();
+
+            SharpTimerDebug($"{playerName} calling css_prestrafe...");
+
+            if (CommandCooldown(player))
+                return;
+
+            playerTimers[playerSlot].TicksSinceLastCmd = 0;
+
+            playerTimers[playerSlot].Prestrafe = playerTimers[playerSlot].Prestrafe ? false : true;
+
+            if (playerTimers[playerSlot].Prestrafe)
+                PrintToChat(player, Localizer["prestrafe_on"]);
+            else
+                PrintToChat(player, Localizer["prestrafe_off"]);
+
+            SharpTimerDebug($"Prestrafe set to: {playerTimers[playerSlot].Prestrafe} for {playerName}");
+
+            if (enableDb)
+            {
+                _ = Task.Run(async () => await SetPlayerStats(player, steamID, playerName, playerSlot));
+            }
+        }
+
         [ConsoleCommand("css_timer", "Stops your timer")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void ForceStopTimer(CCSPlayerController? player, CommandInfo command)
