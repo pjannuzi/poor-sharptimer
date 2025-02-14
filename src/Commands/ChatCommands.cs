@@ -475,6 +475,17 @@ namespace SharpTimer
             SetFov(player, desiredFov);
         }
 
+        [ConsoleCommand("css_decoy", "Gives the player a decoy")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void DecoyCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            if (!IsAllowedPlayer(player)) return;
+
+            HideWeapon(player);
+
+            player.GiveNamedItem("weapon_decoy");
+        }
+
         public void SetFov(CCSPlayerController? player, int desiredFov, bool noMySql = false)
         {
             player!.DesiredFOV = (uint)desiredFov;
