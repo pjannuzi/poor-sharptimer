@@ -133,5 +133,7 @@
   "connect_message": "Player {red}{0} {default}connected!",
   "connected_message": "Player {red}{0} {default}connected for the {1} time!",
   "connected_message_first": "Player {red}{0} {default}connected for the first time!",
-  "disconnect_message": "Player {red}{0} {default}disconnected!"
+  "disconnect_message": "Player {red}{0} {default}disconnected!",
+  "spec_to_ct": "Moving you to CT",
+  "to_spec": "Moving you to Spectator"
 }

@@ -290,21 +290,21 @@ namespace SharpTimer
             PrintAllEnabledCommands(player!);
         }
 
-        /* [ConsoleCommand("css_spec", "Moves you to Spectator")]
+        [ConsoleCommand("css_spec", "Moves you to Spectator")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void SpecCommand(CCSPlayerController? player, CommandInfo command)
         {
             if ((CsTeam)player.TeamNum == CsTeam.Spectator)
             {
                 player.ChangeTeam(CsTeam.CounterTerrorist);
-                player.PrintToChat(msgPrefix + $"Moving you to CT");
+                PrintToChat(player, Localizer["spec_to_ct"]);
             }
             else
             {
                 player.ChangeTeam(CsTeam.Spectator);
-                player.PrintToChat(msgPrefix + $"Moving you to Spectator");
+                PrintToChat(player, Localizer["to_spec"]);
             }
-        } */
+        }
 
         [ConsoleCommand("css_hud", "Draws/Hides The timer HUD")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
