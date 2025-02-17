@@ -1430,9 +1430,9 @@ namespace SharpTimer
             playerTimers[playerSlot].Prestrafe = playerTimers[playerSlot].Prestrafe ? false : true;
 
             if (playerTimers[playerSlot].Prestrafe)
-                PrintToChat(player, Localizer["prestrafe_on"]);
+                PrintToChat(player, Localizer["prestrafe_shown"]);
             else
-                PrintToChat(player, Localizer["prestrafe_off"]);
+                PrintToChat(player, Localizer["prestrafe_hidden"]);
 
             SharpTimerDebug($"Prestrafe set to: {playerTimers[playerSlot].Prestrafe} for {playerName}");
 

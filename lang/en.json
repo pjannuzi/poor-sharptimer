@@ -60,6 +60,8 @@
   //settings
   "hud_shown": "Hud is now: {green}Shown",
   "hud_hidden": "Hud is now: {red}Hidden",
+  "prestrafe_shown": "Prestrafe is now: {green}Shown",
+  "prestrafe_hidden": "Prestrafe is now: {red}Hidden",
   "keys_shown": "Keys is now: {green}Shown",
   "keys_hidden": "Keys is now: {red}Hidden",
   "jumpstats_shown": "Jump Stats are now: {green}Shown",
