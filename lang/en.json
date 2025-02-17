@@ -75,7 +75,8 @@
   "no_respawnpos_bonus_index": "{lightred}No RespawnBonusPos with index {0} found for current map!",
   "no_endpos": "{lightred}No EndPos found for current map!",
   "map_using_manual_zones": "Current Map is using manual zones",
-  "saved_custom_respawnpos": "Saved custom Start Zone RespawnPos!",
+  "saved_custom_respawnpos": "Custom respawn position saved!",
+  "saved_custom_respawnpos_bonus": "Custom respawn position saved at bonus!",
   "not_inside_startzone": "You are not inside the Start Zone!",
 
   //styles

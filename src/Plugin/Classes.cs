@@ -191,6 +191,9 @@ namespace SharpTimer
         //set respawn
         public string? SetRespawnPos { get; set; }
         public string? SetRespawnAng { get; set; }
+        public string? SetRespawnBonusPos { get; set; }
+        public string? SetRespawnBonusAng { get; set; }
+        public int BonusRespawnIndex { get; set; }
     }
 
     public class CurrentZoneInfo

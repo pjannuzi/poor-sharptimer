@@ -834,7 +834,6 @@ namespace SharpTimer
             try
             {
                 if (!IsAllowedPlayer(player) || respawnEnabled == false) return;
-                SharpTimerDebug($"{player!.PlayerName} calling css_rb...");
 
                 if (CommandCooldown(player))
                     return;
@@ -842,45 +841,18 @@ namespace SharpTimer
                 if (ReplayCheck(player))
                     return;
 
-                playerTimers[player.Slot].TicksSinceLastCmd = 0;
+                playerTimers[player!.Slot].TicksSinceLastCmd = 0;
 
-                //defaults to !b 1 without any args
-                if (command.ArgString == null || command.ArgString == "")
+                int bonusIndex = playerTimers[player.Slot].BonusRespawnIndex != 0 ? playerTimers[player.Slot].BonusRespawnIndex : 1;
+                if (command.ArgString != null && command.ArgString != "")
                 {
-                    if (bonusRespawnPoses[1] != null)
+                    if (!int.TryParse(command.ArgString, out bonusIndex))
                     {
-                        if (bonusRespawnAngs.TryGetValue(1, out QAngle? bonusAng) && bonusAng != null)
-                        {
-                            player.PlayerPawn.Value!.Teleport(bonusRespawnPoses[1]!, bonusRespawnAngs[1]!, new Vector(0, 0, 0));
-                        }
-                        else
-                        {
-                            player.PlayerPawn.Value!.Teleport(bonusRespawnPoses[1]!, new QAngle(player.PlayerPawn.Value.EyeAngles.X, player.PlayerPawn.Value.EyeAngles.Y, player.PlayerPawn.Value.EyeAngles.Z) ?? new QAngle(0, 0, 0), new Vector(0, 0, 0));
-                        }
-                        SharpTimerDebug($"{player.PlayerName} css_rb {1} to {bonusRespawnPoses[1]}");
+                        PrintToChat(player, Localizer["no_respawnpos_bonus_rb"]);
+                        return;
                     }
-                    else
-                    {
-                        PrintToChat(player, Localizer["no_respawnpos_bonus_index", 1]);
-                    }
-                    Server.NextFrame(() =>
-                    {
-                        playerTimers[player.Slot].IsTimerRunning = false;
-                        playerTimers[player.Slot].TimerTicks = 0;
-                        playerTimers[player.Slot].IsBonusTimerRunning = false;
-                        playerTimers[player.Slot].BonusTimerTicks = 0;
-                    });
-                    return;
                 }
 
-                if (!int.TryParse(command.ArgString, out int bonusX))
-                {
-                    SharpTimerDebug("css_rb conversion failed. The input string is not a valid integer.");
-                    PrintToChat(player, Localizer["no_respawnpos_bonus_rb"]);
-                    return;
-                }
-
-                // Remove checkpoints for the current player
                 if (!playerTimers[player.Slot].IsTimerBlocked)
                 {
                     playerCheckpoints.Remove(player.Slot);
@@ -888,17 +860,31 @@ namespace SharpTimer
 
                 if (jumpStatsEnabled) InvalidateJS(player.Slot);
 
-                if (bonusRespawnPoses[bonusX] != null)
-                {
-                    if (bonusRespawnAngs.TryGetValue(bonusX, out QAngle? bonusAng) && bonusAng != null)
-                    {
-                        player.PlayerPawn.Value!.Teleport(bonusRespawnPoses[bonusX]!, bonusRespawnAngs[bonusX]!, new Vector(0, 0, 0));
+                if (bonusRespawnPoses.ContainsKey(bonusIndex))
+                {      
+                    Vector respawnPos;
+                    QAngle respawnAng;
+
+                    if (playerTimers[player.Slot].BonusRespawnIndex == bonusIndex &&
+                        playerTimers[player.Slot].SetRespawnBonusPos != null &&
+                        playerTimers[player.Slot].SetRespawnBonusAng != null)
+                    {   
+                        respawnPos = ParseVector(playerTimers[player.Slot].SetRespawnBonusPos!);
+                        respawnAng = ParseQAngle(playerTimers[player.Slot].SetRespawnBonusAng!);
                     }
                     else
                     {
-                        player.PlayerPawn.Value!.Teleport(bonusRespawnPoses[bonusX]!, new QAngle(player.PlayerPawn.Value.EyeAngles.X, player.PlayerPawn.Value.EyeAngles.Y, player.PlayerPawn.Value.EyeAngles.Z) ?? new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                        respawnPos = bonusRespawnPoses[bonusIndex]!;
+                        if (bonusRespawnAngs.TryGetValue(bonusIndex, out var angle))
+                        {
+                            respawnAng = angle!;
+                        }
+                        else
+                        {
+                            respawnAng = new QAngle(0, 0, 0);
+                        }
                     }
-                    SharpTimerDebug($"{player.PlayerName} css_rb {bonusX} to {bonusRespawnPoses[bonusX]}");
+                    player.PlayerPawn.Value!.Teleport(respawnPos, respawnAng, new Vector(0, 0, 0));
                 }
                 else
                 {
@@ -922,14 +908,12 @@ namespace SharpTimer
             }
         }
 
-        [ConsoleCommand("css_startpos", "Saves a custom respawn point within the start trigger")]
-        [ConsoleCommand("css_setresp", "Saves a custom respawn point within the start trigger")]
+        [ConsoleCommand("css_startpos", "Saves a custom respawn point within the start or bonus trigger")]
+        [ConsoleCommand("css_setresp", "Saves a custom respawn point within the start or bonus trigger")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void SetRespawnCommand(CCSPlayerController? player, CommandInfo command)
         {
             if (!IsAllowedPlayer(player) || respawnEnabled == false) return;
-
-            SharpTimerDebug($"{player!.PlayerName} calling css_startpos...");
 
             if (CommandCooldown(player))
                 return;
@@ -943,43 +927,49 @@ namespace SharpTimer
                 return;
             }
 
-            // Get the player's current position and rotation
             Vector currentPosition = player.Pawn.Value!.CBodyComponent?.SceneNode?.AbsOrigin ?? new Vector(0, 0, 0);
             QAngle currentRotation = player.PlayerPawn.Value!.EyeAngles ?? new QAngle(0, 0, 0);
 
-            if (useTriggers == true)
-            {
-                if (IsVectorInsideBox(currentPosition + new Vector(0, 0, 10), currentMapStartTriggerMaxs!, currentMapStartTriggerMins!))
-                {
-                    // Convert position and rotation to strings
-                    string positionString = $"{currentPosition.X} {currentPosition.Y} {currentPosition.Z}";
-                    string rotationString = $"{currentRotation.X} {currentRotation.Y} {currentRotation.Z}";
+            bool isInsideStartTrigger = IsVectorInsideBox(currentPosition + new Vector(0, 0, 10), currentMapStartTriggerMaxs!, currentMapStartTriggerMins!);
+            bool isInsideBonusTrigger = false;
+            int bonusIndex = 0;
 
-                    playerTimers[player.Slot].SetRespawnPos = positionString;
-                    playerTimers[player.Slot].SetRespawnAng = rotationString;
-                    PrintToChat(player, Localizer["saved_custom_respawnpos"]);
-                }
-                else
+            foreach (var bonus in bonusRespawnPoses)
+            {
+
+                Vector bonusMaxs = bonus.Value! + new Vector(600, 600, 600); 
+                Vector bonusMins = bonus.Value! - new Vector(600, 600, 600);
+
+                if (IsVectorInsideBox(currentPosition + new Vector(0, 0, 10), bonusMaxs, bonusMins))
                 {
-                    PrintToChat(player, Localizer["not_inside_startzone"]);
+                    isInsideBonusTrigger = true;
+                    bonusIndex = bonus.Key;
+                    break;
                 }
+            }
+
+            if (isInsideStartTrigger)
+            {
+                string positionString = $"{currentPosition.X} {currentPosition.Y} {currentPosition.Z}";
+                string rotationString = $"{currentRotation.X} {currentRotation.Y} {currentRotation.Z}";
+
+                playerTimers[player.Slot].SetRespawnPos = positionString;
+                playerTimers[player.Slot].SetRespawnAng = rotationString;
+                PrintToChat(player, Localizer["saved_custom_respawnpos"]);
+            }
+            else if (isInsideBonusTrigger)
+            {
+                string positionString = $"{currentPosition.X} {currentPosition.Y} {currentPosition.Z}";
+                string rotationString = $"{currentRotation.X} {currentRotation.Y} {currentRotation.Z}";
+
+                playerTimers[player.Slot].SetRespawnBonusPos = positionString;
+                playerTimers[player.Slot].SetRespawnBonusAng = rotationString;
+                playerTimers[player.Slot].BonusRespawnIndex = bonusIndex;
+                PrintToChat(player, Localizer["saved_custom_respawnpos_bonus", bonusIndex]);
             }
             else
             {
-                if (IsVectorInsideBox(currentPosition + new Vector(0, 0, 10), currentMapStartC1, currentMapStartC2))
-                {
-                    // Convert position and rotation to strings
-                    string positionString = $"{currentPosition.X} {currentPosition.Y} {currentPosition.Z}";
-                    string rotationString = $"{currentRotation.X} {currentRotation.Y} {currentRotation.Z}";
-
-                    playerTimers[player.Slot].SetRespawnPos = positionString;
-                    playerTimers[player.Slot].SetRespawnAng = rotationString;
-                    PrintToChat(player, Localizer["saved_custom_respawnpos"]);
-                }
-                else
-                {
-                    PrintToChat(player, Localizer["not_inside_startzone"]);
-                }
+                PrintToChat(player, Localizer["not_inside_startzone"]);
             }
         }
 
