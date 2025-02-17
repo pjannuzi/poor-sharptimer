@@ -483,7 +483,9 @@ namespace SharpTimer
 
             HideWeapon(player);
 
-            player.GiveNamedItem("weapon_decoy");
+            player!.GiveNamedItem("weapon_decoy");
+            PrintToChat(player, Localizer["weapon_decoy"]);
+
         }
 
         public void SetFov(CCSPlayerController? player, int desiredFov, bool noMySql = false)
