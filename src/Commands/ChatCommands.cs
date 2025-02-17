@@ -488,6 +488,28 @@ namespace SharpTimer
 
         }
 
+        [ConsoleCommand("css_report", "Create a report")]
+        [ConsoleCommand("css_rp", "Create a report")]
+        [CommandHelper(minArgs: 1, usage: "[message]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void CreateReport(CCSPlayerController? player, CommandInfo command)
+        {
+            if (!IsAllowedPlayer(player)) return;
+
+            var playerName = player!.PlayerName;
+
+            var messageParts = new List<string>();
+            for (int i = 1; i < command.ArgCount; i++)
+            {
+                messageParts.Add(command.ArgByIndex(i));
+            }
+            string message = string.Join(" ", messageParts);
+
+            SendReportDiscordMessage(playerName, message);
+
+            PrintToChat(player, Localizer["report_sent"]);
+        }
+
+
         public void SetFov(CCSPlayerController? player, int desiredFov, bool noMySql = false)
         {
             player!.DesiredFOV = (uint)desiredFov;

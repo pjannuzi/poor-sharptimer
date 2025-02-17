@@ -40,6 +40,7 @@ namespace SharpTimer
                     discordSRWebhookUrl = root.TryGetProperty("DiscordSRWebhookUrl", out var SRurlProperty) ? SRurlProperty.GetString()! : "";
                     discordPBBonusWebhookUrl = root.TryGetProperty("DiscordPBBonusWebhookUrl", out var PBBonusurlProperty) ? PBBonusurlProperty.GetString()! : "";
                     discordSRBonusWebhookUrl = root.TryGetProperty("DiscordSRBonusWebhookUrl", out var SRBonusurlProperty) ? SRBonusurlProperty.GetString()! : "";
+                    discordReportWebhookUrl = root.TryGetProperty("DiscordReportWebhookUrl", out var ReportUrlProperty) ? ReportUrlProperty.GetString()! : "";
                     discordWebhookFooter = root.TryGetProperty("DiscordFooterString", out var FooterProperty) ? FooterProperty.GetString()! : "";
                     discordWebhookRareGif = root.TryGetProperty("DiscordRareGifUrl", out var RareGifProperty) ? RareGifProperty.GetString()! : "";
                     discordWebhookRareGifOdds = root.TryGetProperty("DiscordRareGifOdds", out var RareGifOddsProperty) ? RareGifOddsProperty.GetInt16()! : 10000;
@@ -62,6 +63,32 @@ namespace SharpTimer
                 SharpTimerError($"Error in GetDiscordWebhookURLFromConfigFile: {ex.Message}");
             }
         }
+
+        public async void SendReportDiscordMessage(string playerName, string message)
+        {
+            string? webhookUrl = discordReportWebhookUrl;
+
+            using var client = new HttpClient();
+
+            var payload = new
+            {
+            content = $"{playerName}: {message}",
+            username = discordWebhookBotName,
+            avatar_url = discordWebhookPFPUrl,
+            attachments = Array.Empty<object>()
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response = await client.PostAsync(webhookUrl, data);
+
+            if (!response.IsSuccessStatusCode)
+            {
+            SharpTimerError($"Failed to send message. Status code: {response.StatusCode}");
+            }
+        }
+
 
         public async Task DiscordRecordMessage(CCSPlayerController? player, string playerName, string runTime, string steamID, string placement, int timesFinished, bool isSR = false, string timeDifference = "", int bonusX = 0)
         {
