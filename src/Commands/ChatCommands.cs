@@ -596,6 +596,77 @@ namespace SharpTimer
             _ = Task.Run(async () => await PrintTopRecordsHandler(player, playerName, bonusX));
         }
 
+        [ConsoleCommand("css_topstage", "Prints top players of the selected stage")]
+        [ConsoleCommand("css_srcp", "alias for !topstage")]
+        [CommandHelper(minArgs: 1, usage: "[stage]")]
+        public void PrintTopStageRecords(CCSPlayerController? player, CommandInfo command)
+        {
+            if (!IsAllowedClient(player) || topEnabled == false)
+                return;
+
+            var playerName = player!.PlayerName;
+
+            if (CommandCooldown(player))
+                return;
+            playerTimers[player.Slot].TicksSinceLastCmd = 0;
+
+            if (!int.TryParse(command.ArgString, out int stage))
+            {
+                PrintToChat(player, Localizer["invalid_stage"]);
+                return;
+            }
+
+            _ = Task.Run(async () => await PrintTopStageRecordsHandler(player, playerName, stage));
+
+        }
+
+        public async Task PrintTopStageRecordsHandler(CCSPlayerController? player, string playerName, int stage)
+        {
+            if (!IsAllowedClient(player) || topEnabled == false) return;
+ 
+            Dictionary<string, PlayerRecord> sortedRecords;
+
+            sortedRecords = await GetSortedStageRecordsFromDatabase(stage, 10, 0, currentMapName!);
+
+            if (sortedRecords.Count == 0)
+            {
+                Server.NextFrame(() =>
+                {
+                    if (IsAllowedClient(player))
+                    {
+                        PrintToChat(player, Localizer["no_records_available_stage", currentMapName!]);
+                    }
+                });
+                return;
+            }
+
+            int style = playerTimers[player!.Slot].currentStyle;
+            List<string> printStatements;
+
+            printStatements = [$" {Localizer["prefix"]} {Localizer["top10_records_stage", GetNamedStyle(style), stage, currentMapName!]}"];
+            int rank = 1;
+
+            foreach (var kvp in sortedRecords.Take(10))
+            {
+                string _playerName = kvp.Value.PlayerName!;
+                int timerTicks = kvp.Value.TimerTicks;
+
+                printStatements.Add($" {Localizer["prefix"]} {Localizer["records_stage", rank, _playerName, FormatTime(timerTicks)]}");
+                rank++;
+            }
+
+            Server.NextFrame(() =>
+            {
+                if (IsAllowedClient(player))
+                {
+                    foreach (var statement in printStatements)
+                    {
+                        player!.PrintToChat(statement);
+                    }
+                }
+            });
+        }
+
         public async Task PrintTopRecordsHandler(CCSPlayerController? player, string playerName, int bonusX = 0, string mapName = "", int style = 0)
         {
             if (!IsAllowedClient(player) || topEnabled == false) return;
