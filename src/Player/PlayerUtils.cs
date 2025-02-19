@@ -354,6 +354,35 @@ namespace SharpTimer
             }
         }
 
+        public async Task<string> GetPlayerStagePlacementWithTotalTrue(CCSPlayerController? player, string steamId, string playerName, int stage, bool getRankImg = false, bool getPlacementOnly = false, int bonusX = 0)
+        {
+            try
+            {
+                if (!IsAllowedClient(player))
+                    return "";
+
+                string currentMapNamee = bonusX == 0 ? currentMapName! : $"{currentMapName}_bonus{bonusX}";
+
+                int savedPlayerTime = await GetPreviousPlayerStageRecordFromDatabase(player, steamId, currentMapName!, stage, playerName, bonusX);
+
+                if (savedPlayerTime == 0)
+                    return "Unranked"; 
+
+                Dictionary<string, PlayerRecord> sortedRecords = await GetSortedStageRecordsFromDatabase(stage, 0, bonusX, currentMapNamee);
+
+                int placement = sortedRecords.Count(kv => kv.Value.TimerTicks < savedPlayerTime) + 1;
+                int totalPlayers = sortedRecords.Count;
+
+                return $"{placement}/{totalPlayers}";
+            }
+            catch (Exception ex)
+            {
+                SharpTimerError($"Error in GetPlayerStagePlacementWithTotal: {ex}");
+                return "Error";
+            }
+        }
+
+
         public async Task<string> GetPlayerServerPlacement(CCSPlayerController? player, string steamId, string playerName, bool getRankImg = false, bool getPlacementOnly = false, bool getPointsOnly = false)
         {
             try
