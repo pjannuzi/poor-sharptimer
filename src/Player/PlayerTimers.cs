@@ -248,7 +248,6 @@ namespace SharpTimer
 
 
                     var (srSteamID, srPlayerName, srTime) = ("null", "null", "null");
-                    if (playerTimers[playerSlot].CurrentMapStage == stageTrigger || playerTimers[playerSlot] == null) return;
 
                     (srSteamID, srPlayerName, srTime) = await GetStageRecordSteamIDFromDatabase(prevStage);
 
@@ -261,7 +260,10 @@ namespace SharpTimer
                         if (playerTimers.TryGetValue(playerSlot, out PlayerTimerInfo? playerTimer))
                         {
 
-                            if (playerTimer.CurrentMapStage == stageTrigger || playerTimer == null) return;
+                            if (playerTimer.CurrentMapStage == stageTrigger || playerTimer == null)
+                            {
+                                return;
+                            }
 
                             if (previousStageTime != 0)
                             {
