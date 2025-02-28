@@ -9,11 +9,14 @@
   "timer_disabled": "Timer: {red}Disabled",
   "timer_cancelled": "Timer cancelled due to illegal skip attempt",
   "timer_reset": "You got reset due to illegal skip attempt",
+  "timer_prestrafe": "Prestrafe: {lime}[{default}{0}{lime}]{default}",
 
   //records
   "no_records_available": "No records available for {0}",
+  "no_records_available_stage": "No records available for stage {0}",
   "no_records_available_bonus": "No records available for Bonus {0} on {1}",
   "records_map": "#{0}: {lime}{1} {default}- {2} {lime}{3}",
+  "records_stage": "#{0}: {lime}{1} {lime}{2}",
   "new_server_record": "{lime}{0} {white}set a new SR!",
   "new_stage_server_record": "{lime}{0} {white}set a new stage record!",
   "new_server_record_bonus": "{lime}{0} {white}set a new Bonus {1} SR!",
@@ -24,14 +27,17 @@
   "map_finish_rank": "Rank: [{lime}{0}{default}] Times Finished: [{lime}{1}{default}]",
   "top10_records": "Top 10 {0} Records for {1}:",
   "top10_records_bonus": "Top 10 {0} Records for Bonus {1} on {2}:",
+  "top10_records_stage": "Top 10 {0} Records for Stage {1} on {2}:",
 
   //stages
   "invalid_bonus_stage": "Please enter a valid Bonus stage i.e: {lime}!topbonus 1",
+  "invalid_stage": "Please enter a valid stage i.e: {lime}!topstage 1",
   "invalid_bonus_rb": "Please enter a valid Bonus stage i.e: {lime}!rb <index>",
   "stages_unavalible": "Stages unavalible",
   "stages_unavalible_respawnpos": "{lightred}No RespawnStagePos with index {0} found for current map!",
   "stages_enter_valid": "Please enter a valid stage i.e: {lime}!stage <index>",
   "map_no_stages": "{lightred}Current map has no stages!",
+  "stage_rankings": "Rank: [{lime}{0}{default}]]",
 
   //rank
   "current_rank": "You are currently {0}{1}{lime}",
@@ -59,6 +65,8 @@
   //settings
   "hud_shown": "Hud is now: {green}Shown",
   "hud_hidden": "Hud is now: {red}Hidden",
+  "prestrafe_shown": "Prestrafe is now: {green}Shown",
+  "prestrafe_hidden": "Prestrafe is now: {red}Hidden",
   "keys_shown": "Keys is now: {green}Shown",
   "keys_hidden": "Keys is now: {red}Hidden",
   "jumpstats_shown": "Jump Stats are now: {green}Shown",
@@ -72,7 +80,8 @@
   "no_respawnpos_bonus_index": "{lightred}No RespawnBonusPos with index {0} found for current map!",
   "no_endpos": "{lightred}No EndPos found for current map!",
   "map_using_manual_zones": "Current Map is using manual zones",
-  "saved_custom_respawnpos": "Saved custom Start Zone RespawnPos!",
+  "saved_custom_respawnpos": "Custom respawn position saved!",
+  "saved_custom_respawnpos_bonus": "Custom respawn position saved at bonus!",
   "not_inside_startzone": "You are not inside the Start Zone!",
 
   //styles
@@ -132,5 +141,9 @@
   "connect_message": "Player {red}{0} {default}connected!",
   "connected_message": "Player {red}{0} {default}connected for the {1} time!",
   "connected_message_first": "Player {red}{0} {default}connected for the first time!",
-  "disconnect_message": "Player {red}{0} {default}disconnected!"
+  "disconnect_message": "Player {red}{0} {default}disconnected!",
+  "spec_to_ct": "Moving you to CT",
+  "to_spec": "Moving you to Spectator",
+  "weapon_decoy": "Decoy!",
+  "report_sent": "Report sent!"
 }

@@ -238,38 +238,53 @@ namespace SharpTimer
 
         public static string FormatTime(int ticks)
         {
+            // Calculate the total seconds from ticks (64 ticks per second)
             TimeSpan timeSpan = TimeSpan.FromSeconds(ticks / 64.0);
 
-            string milliseconds = $"{(ticks % 64) * (1000.0 / 64.0):000}";
+            // Calculate milliseconds
+            int milliseconds = (int)((ticks % 64) * (1000.0 / 64.0)); 
 
+            // Remove the unit place (keep only hundredths and tenths)
+            milliseconds /= 10;  
+
+            // Format milliseconds to always show two digits
+            string formattedMilliseconds = $"{milliseconds:D2}";  
+
+            // Format minutes and seconds to two digits
             int totalMinutes = (int)timeSpan.TotalMinutes;
+            string formattedMinutes = $"{totalMinutes:D2}";  
+            string formattedSeconds = $"{timeSpan.Seconds:D2}";  
+
+            // If minutes are 60 or more, include hours
             if (totalMinutes >= 60)
             {
-                return $"{totalMinutes / 60:D1}:{totalMinutes % 60:D2}:{timeSpan.Seconds:D2}.{milliseconds}";
+                return $"{totalMinutes / 60:D1}:{formattedMinutes}:{formattedSeconds}.{formattedMilliseconds}";
             }
 
-            return $"{totalMinutes:D1}:{timeSpan.Seconds:D2}.{milliseconds}";
+            // Otherwise, show just minutes, seconds, and milliseconds
+            return $"{formattedMinutes}:{formattedSeconds}.{formattedMilliseconds}";
         }
 
         private static string FormatTimeDifference(int currentTicks, int previousTicks, bool noColor = false)
-        {
-            int differenceTicks = previousTicks - currentTicks;
-            string sign = (differenceTicks > 0) ? "-" : "+";
-            char signColor = (differenceTicks > 0) ? ChatColors.Green : ChatColors.Red;
-
-            TimeSpan timeDifference = TimeSpan.FromSeconds(Math.Abs(differenceTicks) / 64.0);
-
-            // Format seconds with three decimal points
-            string secondsWithMilliseconds = $"{timeDifference.Seconds:D2}.{Math.Abs(differenceTicks) % 64 * (1000.0 / 64.0):000}";
-
-            int totalDifferenceMinutes = (int)timeDifference.TotalMinutes;
-            if (totalDifferenceMinutes >= 60)
-            {
-                return $"{(noColor ? "" : $"{signColor}")}{sign}{totalDifferenceMinutes / 60:D1}:{totalDifferenceMinutes % 60:D2}:{secondsWithMilliseconds}";
-            }
-
-            return $"{(noColor ? "" : $"{signColor}")}{sign}{totalDifferenceMinutes:D1}:{secondsWithMilliseconds}";
-        }
+	{
+		int differenceTicks = previousTicks - currentTicks;
+		string sign = (differenceTicks > 0) ? "-" : "+";
+        char signColor = (differenceTicks > 0) ? ChatColors.Green : ChatColors.Red;
+        
+		TimeSpan timeDifference = TimeSpan.FromSeconds(Math.Abs(differenceTicks) / 64.0);
+		int milliseconds = (int)((differenceTicks % 64) * (1000.0 / 64.0)); 
+		milliseconds /= 10;
+		int correctedMilliseconds = Math.Abs(milliseconds);
+		string formattedMilliseconds = $"{correctedMilliseconds:D2}";  
+		string secondsWithMilliseconds = $"{timeDifference.Seconds:D2}.{formattedMilliseconds}";
+		
+		int totalDifferenceMinutes = (int)timeDifference.TotalMinutes;
+		if (totalDifferenceMinutes >= 60)
+		{
+			return $"{(noColor ? "" : $"{signColor}")}{sign}{totalDifferenceMinutes / 60:D1}:{totalDifferenceMinutes % 60:D2}:{secondsWithMilliseconds}";
+		}
+		return$"{(noColor ? "" : $"{signColor}")}{sign}{totalDifferenceMinutes:D1}:{secondsWithMilliseconds}";
+	}
 
         private static string FormatSpeedDifferenceFromString(string currentSpeed, string previousSpeed, bool noColor = false)
         {

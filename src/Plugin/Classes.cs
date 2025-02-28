@@ -153,6 +153,7 @@ namespace SharpTimer
         public bool HideTimerHud { get; set; }
         public bool HideKeys { get; set; }
         public bool SoundsEnabled { get; set; }
+        public bool Prestrafe { get; set; }
         public bool BindsDisabled { get; set; }
         public bool HideJumpStats { get; set; }
         public int PlayerFov { get; set; }
@@ -190,6 +191,9 @@ namespace SharpTimer
         //set respawn
         public string? SetRespawnPos { get; set; }
         public string? SetRespawnAng { get; set; }
+        public string? SetRespawnBonusPos { get; set; }
+        public string? SetRespawnBonusAng { get; set; }
+        public int BonusRespawnIndex { get; set; }
     }
 
     public class CurrentZoneInfo
