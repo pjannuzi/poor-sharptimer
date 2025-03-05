@@ -53,11 +53,10 @@ namespace SharpTimer
                 var steamID = player.SteamID.ToString();
                 var callerName = caller.Entity.Name;
 
-                if (caller.Entity.Name.ToString() == "bhop_block" && !playerTimers[player.Slot].IsTimerBlocked)
-                {
-                    playerTimers[player.Slot].IsOnBhopBlock = true;
-                    return HookResult.Continue;
-                }
+                // if (caller.Entity.Name.ToString() == "bhop_block" && !playerTimers[player.Slot].IsTimerBlocked)
+                // {
+                //     return HookResult.Continue;
+                // }
 
                 if (useStageTriggers == true && stageTriggers.ContainsKey(callerHandle) && playerTimers[playerSlot].IsTimerBlocked == false && playerTimers[playerSlot].IsTimerRunning == true)
                 {
@@ -73,7 +72,8 @@ namespace SharpTimer
                     }
                 }
 
-                if (useCheckpointTriggers == true && cpTriggers.ContainsKey(callerHandle) && playerTimers[playerSlot].IsTimerBlocked == false && playerTimers[playerSlot].IsTimerRunning == true)
+                if (useCheckpointTriggers == true && cpTriggers.ContainsKey(callerHandle) && playerTimers[playerSlot].IsTimerBlocked == false && playerTimers[playerSlot].IsTimerRunning == true ||
+                useCheckpointTriggers == true && cpTriggers.ContainsKey(callerHandle) && playerTimers[playerSlot].IsPracTimer == true && playerTimers[playerSlot].IsPracTimerRunning == true)
                 {
                     _ = Task.Run(async () => await HandlePlayerCheckpointTimes(player, callerHandle, playerSlot, steamID, playerName));
                     return HookResult.Continue;
@@ -189,7 +189,6 @@ namespace SharpTimer
 
         public HookResult TriggerMultipleOnEndTouch(CEntityInstance activator, CEntityInstance caller)
         {
-
             try
             {
                 if (activator == null || caller == null)
@@ -197,7 +196,6 @@ namespace SharpTimer
                     SharpTimerDebug("Null reference detected in trigger_multiple OnEndTouch hook.");
                     return HookResult.Continue;
                 }
-
                 if (activator.DesignerName != "player" || useTriggers == false) return HookResult.Continue;
 
                 var player = new CCSPlayerController(new CCSPlayerPawn(activator.Handle).Controller.Value!.Handle);
@@ -219,15 +217,12 @@ namespace SharpTimer
                 var playerName = player.PlayerName;
                 var callerName = caller.Entity.Name;
 
-                if (caller.Entity.Name.ToString() == "bhop_block" && IsAllowedPlayer(player) && !playerTimers[player.Slot].IsTimerBlocked)
-                {
-                    playerTimers[player.Slot].IsOnBhopBlock = false;
-                    playerTimers[player.Slot].TicksOnBhopBlock = 0;
+                // if (caller.Entity.Name.ToString() == "bhop_block" && IsAllowedPlayer(player) && !playerTimers[player.Slot].IsTimerBlocked)
+                // {
+                //     return HookResult.Continue;
+                // }
 
-                    return HookResult.Continue;
-                }
-
-                if (IsValidStartTriggerName(callerName) && !playerTimers[playerSlot].IsTimerBlocked)
+                if (IsValidStartTriggerName(callerName) && !playerTimers[playerSlot].IsTimerBlocked || IsValidStartTriggerName(callerName) && playerTimers[playerSlot].IsPracTimer)
                 {
                     if(playerTimers.TryGetValue(playerSlot, out PlayerTimerInfo? playerTimer))
                     {

@@ -113,9 +113,9 @@ namespace SharpTimer
         public bool IsPracTimerRunning { get; set; }
         public int AFKTicks { get; set; }
         public bool AFKWarned { get; set; }
-        public bool IsOnBhopBlock { get; set; }
         public bool IsNoclip { get; set; }
         public bool IsTimerBlocked { get; set; }
+        public bool IsPracTimer { get; set; }
         public int TimerTicks { get; set; }
         public int PracTimerTicks { get; set; }
         public List<int> PrevTimerTicks { get; set; } = new();
@@ -153,7 +153,6 @@ namespace SharpTimer
 
         //logic
         public int? TicksInAir { get; set; }
-        public int TicksOnBhopBlock { get; set; }
         public int CheckpointIndex { get; set; }
         public Dictionary<int, int>? StageTimes { get; set; }
         public Dictionary<int, string>? StageVelos { get; set; }
@@ -423,6 +422,7 @@ namespace SharpTimer
         public string? PositionString { get; set; }
         public string? RotationString { get; set; }
         public string? SpeedString { get; set; }
+        public int? Ticks { get; set; }
     }
 
     // Stage times and velos

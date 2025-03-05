@@ -1656,12 +1656,12 @@ namespace SharpTimer
                     playerCheckpoints.Remove(player.Slot);
                 }
 
-                if (jumpStatsEnabled) InvalidateJS(player.Slot);
+                //if (jumpStatsEnabled) InvalidateJS(player.Slot);
 
                 if (stageTriggerCount != 0 || cpTriggerCount != 0)//remove previous stage times and checkpoints if the map has stages or checkpoints
                 {
                     playerTimers[player.Slot].StageTimes!.Clear();
-                    playerTimers[player.Slot].CurrentMapCheckpoint = 0;
+                    //playerTimers[player.Slot].CurrentMapCheckpoint = 0;
                 }
 
                 if (toEnd == false)
@@ -1704,12 +1704,18 @@ namespace SharpTimer
 
                 Server.NextFrame(() =>
                 {
-                    playerTimers[player.Slot].IsTimerRunning = false;
-                    playerTimers[player.Slot].TimerTicks = 0;
-                    playerTimers[player.Slot].StageTicks = 0;
-                    playerTimers[player.Slot].IsBonusTimerRunning = false;
-                    playerTimers[player.Slot].BonusTimerTicks = 0;
-                    playerTimers[player.Slot].IsTimerBlocked = false;
+                    if (playerTimers[player.Slot].IsPracTimer != true)
+                    {
+                        playerTimers[player.Slot].IsTimerRunning = false;
+                        playerTimers[player.Slot].TimerTicks = 0;
+                        playerTimers[player.Slot].StageTicks = 0;
+                        playerTimers[player.Slot].IsBonusTimerRunning = false;
+                        playerTimers[player.Slot].BonusTimerTicks = 0;
+                        playerTimers[player.Slot].IsTimerBlocked = false;
+                    } else {
+                        playerTimers[player.Slot].IsPracTimerRunning = false;
+                        playerTimers[player.Slot].PracTimerTicks = 0;
+                    }
                 });
                 PlaySound(player, respawnSound);
             }
@@ -1820,7 +1826,7 @@ namespace SharpTimer
             // Remove checkpoints for the current player
             playerCheckpoints.Remove(player.Slot);
 
-            playerTimers[player.Slot].IsTimerBlocked = playerTimers[player.Slot].IsTimerBlocked ? false : true;
+            playerTimers[player.Slot].IsTimerBlocked = !playerTimers[player.Slot].IsTimerBlocked;
             playerTimers[player.Slot].IsRecordingReplay = false;
 
 
@@ -1833,7 +1839,9 @@ namespace SharpTimer
             playerTimers[player.Slot].TimerTicks = 0;
             playerTimers[player.Slot].IsBonusTimerRunning = false;
             playerTimers[player.Slot].BonusTimerTicks = 0;
-            playerTimers[player.Slot].IsPracTimerRunning = playerTimers[player.Slot].IsTimerBlocked ? false : true;
+            playerTimers[player.Slot].IsPracTimerRunning = false;
+            playerTimers[player.Slot].IsPracTimer = playerTimers[player.Slot].IsTimerBlocked;
+            PrintToChatAll($"{playerTimers[player.Slot].IsPracTimer}");
 
             if (stageTriggers.Count != 0) playerTimers[player.Slot].StageTimes!.Clear(); //remove previous stage times if the map has stages
             if (stageTriggers.Count != 0) playerTimers[player.Slot].StageVelos!.Clear(); //remove previous stage times if the map has stages
@@ -2050,6 +2058,9 @@ namespace SharpTimer
             string rotationString = $"{currentRotation.X} {currentRotation.Y} {currentRotation.Z}";
             string speedString = $"{currentSpeed.X} {currentSpeed.Y} {currentSpeed.Z}";
 
+            //Get the player current map time
+            int currentLocTicks = playerTimers[player.Slot].TimerTicks;
+
             // Ensure player's checkpoint list exists
             if (!playerCheckpoints.ContainsKey(player.Slot))
             {
@@ -2061,7 +2072,8 @@ namespace SharpTimer
             {
                 PositionString = positionString,
                 RotationString = rotationString,
-                SpeedString = speedString
+                SpeedString = speedString,
+                Ticks = currentLocTicks,
             });
 
             // Always set the new checkpoint as the selected one
@@ -2126,10 +2138,12 @@ namespace SharpTimer
 
             if (removeCpRestrictEnabled == true)
             {
+                playerTimers[player.Slot].PracTimerTicks = (int)selectedCheckpoint.Ticks!;
                 player.PlayerPawn.Value!.Teleport(position, rotation, speed);
             }
             else
             {
+                playerTimers[player.Slot].PracTimerTicks = (int)selectedCheckpoint.Ticks!;
                 player.PlayerPawn.Value!.Teleport(position, rotation, new Vector(0, 0, 0));
             }
 
@@ -2179,6 +2193,8 @@ namespace SharpTimer
                 playerTimers[player.Slot].CheckpointIndex = index;
                 if(playerTimers[player.Slot].currentStyle == 12)
                     playerTimers[player.Slot].TimerTicks = playerTimers[player.Slot].PrevTimerTicks[playerTimers[player.Slot].CheckpointIndex];
+
+                playerTimers[player.Slot].PracTimerTicks = (int)previousCheckpoint.Ticks!;
 
                 // Convert position and rotation strings to Vector and QAngle
                 Vector position = ParseVector(previousCheckpoint.PositionString ?? "0 0 0");
@@ -2235,6 +2251,8 @@ namespace SharpTimer
                 playerTimers[player.Slot].CheckpointIndex = index;
                 if(playerTimers[player.Slot].currentStyle == 12)
                     playerTimers[player.Slot].TimerTicks = playerTimers[player.Slot].PrevTimerTicks[playerTimers[player.Slot].CheckpointIndex];
+
+                playerTimers[player.Slot].PracTimerTicks = (int)nextCheckpoint.Ticks!;
 
                 // Convert position and rotation strings to Vector and QAngle
                 Vector position = ParseVector(nextCheckpoint.PositionString ?? "0 0 0");

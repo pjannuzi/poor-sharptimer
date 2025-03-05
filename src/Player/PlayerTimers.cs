@@ -24,6 +24,7 @@ namespace SharpTimer
     {
         public void OnTimerStart(CCSPlayerController? player, int bonusX = 0)
         {
+            PrintToChatAll("EU ESTOU NO TIMER START.");
             if (!IsAllowedPlayer(player)) return;
 
             if (bonusX != 0)
@@ -36,6 +37,7 @@ namespace SharpTimer
             {
                 if (useTriggers || useTriggersAndFakeZones) SharpTimerDebug($"Starting Timer for {player!.PlayerName}");
                 playerTimers[player!.Slot].IsTimerRunning = true;
+                if(playerTimers[player!.Slot].IsPracTimer) playerTimers[player!.Slot].IsPracTimerRunning = true;
                 playerTimers[player!.Slot].IsBonusTimerRunning = false;
             }
             Vector playerSpeed = player.PlayerPawn!.Value!.AbsVelocity;
@@ -53,6 +55,7 @@ namespace SharpTimer
             playerCheckpoints.Remove(player!.Slot);
             playerTimers[player!.Slot].TimerTicks = 0;
             playerTimers[player!.Slot].StageTicks = 0;
+            playerTimers[player!.Slot].PracTimerTicks = 0;
             playerTimers[player.Slot].StageTimes!.Clear();
             playerTimers[player.Slot].StageVelos!.Clear();
             playerTimers[player!.Slot].BonusStage = bonusX;
@@ -331,15 +334,23 @@ namespace SharpTimer
                 {
                     if (useStageTriggers == true) //use stagetime instead
                     {
-                        playerTimers[playerSlot].CurrentMapCheckpoint++;
+                        playerTimers[playerSlot].CurrentMapCheckpoint = cpTrigger;
                         return;
                     }
 
                     SharpTimerDebug($"Player {playerName} has a checkpoint trigger with handle {triggerHandle}");
 
-                    playerTimers[playerSlot].CurrentMapCheckpoint++;
+                    playerTimers[playerSlot].CurrentMapCheckpoint = cpTrigger;
 
-                    var playerTimerTicks = playerTimers[playerSlot].TimerTicks; // store so its in sync with player
+                    int playerTimerTicks;
+
+                    if(playerTimers[playerSlot].IsPracTimerRunning == true)
+                    {
+                        playerTimerTicks = playerTimers[playerSlot].PracTimerTicks;
+                    } else {
+                        playerTimerTicks = playerTimers[playerSlot].TimerTicks;
+                    }
+
 
                     var (srSteamID, srPlayerName, srTime) = ("null", "null", "null");
                     if (playerTimers[playerSlot] == null) return;

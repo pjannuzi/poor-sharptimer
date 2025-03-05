@@ -55,7 +55,7 @@ namespace SharpTimer
                             continue;
                         }
 
-                        bool isOnBhopBlock = playerTimer.IsOnBhopBlock;
+                        //bool isOnBhopBlock = playerTimer.IsOnBhopBlock;
                         bool isTimerRunning = playerTimer.IsTimerRunning;
                         bool isPracTimerRunning = playerTimer.IsPracTimerRunning;
                         bool isBonusTimerRunning = playerTimer.IsBonusTimerRunning;
@@ -143,24 +143,24 @@ namespace SharpTimer
                             }
                         }
                         
-                        if(playerTimer.currentStyle.Equals(4)) //check if 400vel
+                        if(playerTimer.currentStyle.Equals(4))
                         {
                             SetVelocity(player, player!.Pawn.Value!.AbsVelocity, 400);
                         }
 
-                        if(playerTimer.currentStyle.Equals(10) && !player.PlayerPawn.Value.GroundEntity.IsValid) //check if ff
+                        if(playerTimer.currentStyle.Equals(10) && !player.PlayerPawn.Value.GroundEntity.IsValid)
                         {
                             if (currentTick % 2 != 0) IncreaseVelocity(player);
                         }
 
-                        if (isOnBhopBlock)
-                        {
-                            playerTimer.TicksOnBhopBlock++;
-                            if (playerTimer.TicksOnBhopBlock > bhopBlockTime)
-                            {
-                                RespawnPlayer(player);
-                            }
-                        }
+                        // if (isOnBhopBlock)
+                        // {
+                        //     playerTimer.TicksOnBhopBlock++;
+                        //     if (playerTimer.TicksOnBhopBlock > bhopBlockTime)
+                        //     {
+                        //         RespawnPlayer(player);
+                        //     }
+                        // }
 
                         if (useTriggers == false && isTimerBlocked == false)
                         {
@@ -171,7 +171,7 @@ namespace SharpTimer
                             CheckPlayerCoords(player, playerSpeed);
                         }
 
-                        if (jumpStatsEnabled == true) OnJumpStatTick(player, playerSpeed, player.Pawn?.Value!.CBodyComponent?.SceneNode!.AbsOrigin!, player.PlayerPawn?.Value.EyeAngles!, playerButtons);
+                        //if (jumpStatsEnabled == true) OnJumpStatTick(player, playerSpeed, player.Pawn?.Value!.CBodyComponent?.SceneNode!.AbsOrigin!, player.PlayerPawn?.Value.EyeAngles!, playerButtons);
                         if (StrafeHudEnabled == true) OnSyncTick(player, playerButtons, player.PlayerPawn?.Value.EyeAngles!);
                         if(StrafeHudEnabled == true && playerTimers[player.Slot].inStartzone && playerTimer.Rotation.Count > 0) 
                         { 
@@ -309,8 +309,11 @@ namespace SharpTimer
                         string playerVelColor = useDynamicColor ? secondaryHUDcolorDynamic : secondaryHUDcolor;
                         string formattedPlayerPre = Math.Round(ParseVector(playerTimer.PreSpeed ?? "0 0 0").Length2D()).ToString("000");
                         string playerTime = FormatTime(timerTicks);
+                        string pracPlayerTime = FormatTime(pracTimerTicks);
                         string playerBonusTime = FormatTime(playerTimer.BonusTimerTicks);
-                        string timerLine = isBonusTimerRunning
+
+                        string timerLine = isPracTimerRunning ? $" <font class='fontSize-s stratum-bold-italic' color='{tertiaryHUDcolor}'>PRAC Timer: </font><font class='fontSize-l horizontal-center' color='{primaryHUDcolor}'>{pracPlayerTime}</font> <font color='gray' class='fontSize-s stratum-bold-italic'>({GetPlayerPlacement(player)})</font>{((playerTimer.CurrentMapStage != 0 && useStageTriggers == true) ? $" <font color='gray' class='fontSize-s stratum-bold-italic'> {playerTimer.CurrentMapStage}/{stageTriggerCount}</font>" : "")} <br>"
+                                        :   isBonusTimerRunning
                                             ? $" <font class='fontSize-s stratum-bold-italic' color='{tertiaryHUDcolor}'>Bonus #{playerTimer.BonusStage} Timer:</font> <font class='fontSize-l horizontal-center' color='{primaryHUDcolor}'>{playerBonusTime}</font> <br>"
                                             : isTimerRunning
                                                 ? $" <font class='fontSize-s stratum-bold-italic' color='{tertiaryHUDcolor}'>Timer: </font><font class='fontSize-l horizontal-center' color='{primaryHUDcolor}'>{playerTime}</font> <font color='gray' class='fontSize-s stratum-bold-italic'>({GetPlayerPlacement(player)})</font>{((playerTimer.CurrentMapStage != 0 && useStageTriggers == true) ? $" <font color='gray' class='fontSize-s stratum-bold-italic'> {playerTimer.CurrentMapStage}/{stageTriggerCount}</font>" : "")} <br>"
