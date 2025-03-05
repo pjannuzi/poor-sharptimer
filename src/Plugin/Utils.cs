@@ -154,8 +154,8 @@ namespace SharpTimer
                 $"{(enableReplays ? $"{Localizer["prefix"]} {Localizer["ad_replay_pb"]}" : "")}",
                 $"{(enableReplays ? $"{Localizer["prefix"]} {Localizer["ad_replay_sr"]}" : "")}",
                 $"{(enableReplays ? $"{Localizer["prefix"]} {Localizer["ad_replay_top"]}" : "")}",
-                $"{(enableReplays ? $"{Localizer["prefix"]} {Localizer["ad_replay_bonus"]}" : "")}",
-                $"{(enableReplays ? $"{Localizer["prefix"]} {Localizer["ad_replay_bonus_pb"]}" : "")}",
+                // $"{(enableReplays ? $"{Localizer["prefix"]} {Localizer["ad_replay_bonus"]}" : "")}",
+                // $"{(enableReplays ? $"{Localizer["prefix"]} {Localizer["ad_replay_bonus_pb"]}" : "")}",
                 $"{(globalRanksEnabled ? $"{Localizer["prefix"]} {Localizer["ad_points"]}" : "")}",
                 $"{(respawnEnabled ? $"{Localizer["prefix"]} {Localizer["ad_respawn"]}" : "")}",
                 $"{(respawnEnabled ? $"{Localizer["prefix"]} {Localizer["ad_start_pos"]}" : "")}",
@@ -169,7 +169,7 @@ namespace SharpTimer
                 $"{Localizer["prefix"]} {Localizer["ad_hud"]}",
                 $"{Localizer["prefix"]} {Localizer["ad_keys"]}",
                 $"{(enableStyles ? $"{Localizer["prefix"]} {Localizer["ad_styles"]}" : "")}",
-                $"{(jumpStatsEnabled ? $"{Localizer["prefix"]} {Localizer["ad_jumpstats"]}" : "")}"
+                $"{Localizer["prefix"]} {Localizer["ad_discord"]}",
             };
 
             return adMessages;
@@ -905,6 +905,8 @@ namespace SharpTimer
                     stageTriggers.Clear();
                     stageTriggerAngs.Clear();
                     stageTriggerPoses.Clear();
+                    WorldTextManager.WorldTextEntities.Clear();
+                    WorldTextManager.WorldTextOwners.Clear();
 
                     KillServerCommandEnts();
                     globalDisabled = false;

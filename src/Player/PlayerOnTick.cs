@@ -13,6 +13,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using System.Drawing;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
@@ -56,9 +57,11 @@ namespace SharpTimer
 
                         bool isOnBhopBlock = playerTimer.IsOnBhopBlock;
                         bool isTimerRunning = playerTimer.IsTimerRunning;
+                        bool isPracTimerRunning = playerTimer.IsPracTimerRunning;
                         bool isBonusTimerRunning = playerTimer.IsBonusTimerRunning;
                         bool isTimerBlocked = playerTimer.IsTimerBlocked;
                         int timerTicks = playerTimer.TimerTicks;
+                        int pracTimerTicks = playerTimer.PracTimerTicks;
                         PlayerButtons? playerButtons = player.Buttons;
                         Vector playerSpeed = player.PlayerPawn!.Value!.AbsVelocity;
                         var hasWeapons = player.PlayerPawn?.Value?.WeaponServices?.MyWeapons?.Count > 0;
@@ -103,6 +106,10 @@ namespace SharpTimer
                         {
                             playerTimer.TimerTicks++;
                             if (useStageTriggers) playerTimer.StageTicks++;
+                        }
+
+                        if (isPracTimerRunning) {
+                            playerTimer.PracTimerTicks++;
                         }
                         else if (isBonusTimerRunning)
                         {
@@ -278,6 +285,8 @@ namespace SharpTimer
 
                         bool keyEnabled = !playerTimer.HideKeys && keysOverlayEnabled;
                         bool hudEnabled = !playerTimer.HideTimerHud && hudOverlayEnabled;
+                        bool centerSpeedEnabled = !playerTimer.CenterSpeed && centerSpeedOverlayEnabled;
+
 
                         string formattedPlayerVel = Math.Round(use2DSpeed ? playerSpeed.Length2D()
                                                                             : playerSpeed.Length())
@@ -323,6 +332,8 @@ namespace SharpTimer
                             infoLine = GetMainMapInfoLine(playerTimer);
                         }
 
+                        string centerSpeedHtml = $"<font class='fontSize-l horizontal-center' color='{secondaryHUDcolor}'>{formattedPlayerVel} u/ss</font>";
+
                         string keysLineNoHtml = $"{(hudEnabled ? "<br>" : "")}<font class='fontSize-ml stratum-light-mono' color='{tertiaryHUDcolor}'>{((playerButtons & PlayerButtons.Moveleft) != 0 ? "A" : "_")} " +
                                                 $"{((playerButtons & PlayerButtons.Forward) != 0 ? "W" : "_")} " +
                                                 $"{((playerButtons & PlayerButtons.Moveright) != 0 ? "D" : "_")} " +
@@ -339,7 +350,18 @@ namespace SharpTimer
                                             ((playerTimer.IsTester && !playerTimer.IsReplaying) ? $"{(!keyEnabled ? "<br>" : "")}" + playerTimer.TesterBigGif : "") +
                                             ((playerTimer.IsVip && !playerTimer.IsTester && !playerTimer.IsReplaying) ? $"{(!keyEnabled ? "<br><br>" : "")}" + $"<br><img src='https://files.catbox.moe/{playerTimer.VipBigGif}.gif'><br>" : "") +
                                             ((playerTimer.IsReplaying && playerTimer.VipReplayGif != "x") ? playerTimer.VipReplayGif : "");
-
+                        
+                        if(centerSpeedEnabled)
+                        {
+                          if(WorldTextManager.hasWorldText(player))
+                          {
+                            Server.NextFrame(() => 
+                            {
+                                WorldTextManager.UpdateText(player, formattedPlayerVel);
+                            });
+                          }
+                        }
+                        
                         if (hudEnabled || keyEnabled)
                         {
                             player.PrintToCenterHtml(hudContent);
@@ -410,6 +432,7 @@ namespace SharpTimer
                     Vector playerSpeed = target.PlayerPawn!.Value!.AbsVelocity;
                     bool keyEnabled = !playerTimer.HideKeys && !playerTimer.IsReplaying && keysOverlayEnabled;
                     bool hudEnabled = !playerTimer.HideTimerHud && hudOverlayEnabled;
+                    bool centerSpeedEnabled = !playerTimer.CenterSpeed && centerSpeedOverlayEnabled;
 
                     string formattedPlayerVel = Math.Round(use2DSpeed ? playerSpeed.Length2D()
                                                                         : playerSpeed.Length())
@@ -438,6 +461,8 @@ namespace SharpTimer
                     {
                         infoLine = GetMainMapInfoLine(playerTimer);
                     }
+
+                    string centerSpeedHtml = $"<font class='fontSize-l horizontal-center' color='{secondaryHUDcolor}'>{formattedPlayerVel} u/ss</font>";
 
                     string keysLineNoHtml = $"{(hudEnabled ? "<br>" : "")}<font class='fontSize-ml stratum-bold-mono' color='{tertiaryHUDcolor}'>{((playerButtons & PlayerButtons.Moveleft) != 0 ? "A" : "_")} " +
                                             $"{((playerButtons & PlayerButtons.Forward) != 0 ? "W" : "_")} " +

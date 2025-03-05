@@ -137,6 +137,7 @@
   "ad_keys": "Type {primary}!keys{default} to toggle hud keys!",
   "ad_styles": "Type {primary}!styles{default} to list all available styles!",
   "ad_jumpstats": "Type {primaryChatColor}!jumpstats{default} to toggle JumpStats!",
+  "ad_discord": "Entre no nosso {primaryChatColor}discord{default} e tenha acesso a records, updates, e muito mais! {primary}https://discord.gg/uvcChSt83x{default}",
 
   //other
   "command_cooldown": "Command is on cooldown. Chill...",

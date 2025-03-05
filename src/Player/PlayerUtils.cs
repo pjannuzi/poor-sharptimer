@@ -66,11 +66,8 @@ namespace SharpTimer
                 player.PrintToConsole($"{Localizer["console_replay"]}");
                 player.PrintToConsole($"{Localizer["console_replaytop"]}");
                 player.PrintToConsole($"{Localizer["console_replaypb"]}");
-                player.PrintToConsole($"{Localizer["console_replaybonus"]}");
-                player.PrintToConsole($"{Localizer["console_replaybonuspb"]}");
             }
 
-            if (jumpStatsEnabled) player.PrintToConsole($"{Localizer["console_jumpstats"]}");
             player.PrintToConsole($"{Localizer["console_hideweapon"]}");
             player.PrintToConsole($"{Localizer["console_spec"]}");
             if (enableStyles) player.PrintToConsole($"{Localizer["console_styles"]}");

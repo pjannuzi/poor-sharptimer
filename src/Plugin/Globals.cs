@@ -173,6 +173,7 @@ namespace SharpTimer
         public bool respawnEnabled = true;
         public bool respawnEndEnabled = false;
 
+        public bool centerSpeedOverlayEnabled = true;
         public bool keysOverlayEnabled = true;
         public bool hudOverlayEnabled = true;
         public int hudTickrate = 64;

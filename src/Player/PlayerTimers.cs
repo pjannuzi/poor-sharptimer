@@ -237,13 +237,21 @@ namespace SharpTimer
                 }
 
                 SharpTimerDebug($"Player {playerName} has a stage trigger with handle {triggerHandle}");
+                
 
                 if (stageTriggers.TryGetValue(triggerHandle, out int stageTrigger))
                 {
                     //var playerTimerTicks = playerTimers[playerSlot].TimerTicks; // store so its in sync with player
+
+                    if (playerTimers[playerSlot].CurrentMapStage == stageTrigger) {
+                        playerTimers[playerSlot].StageTicks = 0;
+                        return;
+                    }
+                    
                     var playerStageTicks = playerTimers[playerSlot].StageTicks;
                     var formattedStageTicks = FormatTime(playerStageTicks);
                     var prevStage = stageTrigger - 1;
+                    playerTimers[playerSlot].CurrentMapStage = stageTrigger;
 
                     string currentSpeed = Math.Round(use2DSpeed ? Math.Sqrt(player.PlayerPawn.Value!.AbsVelocity.X * player.PlayerPawn.Value.AbsVelocity.X + player.PlayerPawn.Value.AbsVelocity.Y * player.PlayerPawn.Value.AbsVelocity.Y)
                                                                                 : Math.Sqrt(player.PlayerPawn.Value!.AbsVelocity.X * player.PlayerPawn.Value.AbsVelocity.X + player.PlayerPawn.Value.AbsVelocity.Y * player.PlayerPawn.Value.AbsVelocity.Y + player.PlayerPawn.Value.AbsVelocity.Z * player.PlayerPawn.Value.AbsVelocity.Z))
@@ -261,12 +269,9 @@ namespace SharpTimer
                     {
                         if (!IsAllowedPlayer(player)) return;
                         if (playerTimers.TryGetValue(playerSlot, out PlayerTimerInfo? playerTimer))
-                        {
-
-                            if (playerTimer.CurrentMapStage == stageTrigger || playerTimer == null)
-                            {
-                                return;
-                            }
+                        {   
+                            SharpTimerDebug($"playerTimer.CurrentMapStage {playerTimer.CurrentMapStage}");
+                            SharpTimerDebug($"stageTrigger {stageTrigger}");
 
                             if (previousStageTime != 0)
                             {
@@ -279,6 +284,9 @@ namespace SharpTimer
                                     PrintToChat(player, $"Speed: {ChatColors.White}[{primaryChatColor}{currentSpeed}u/s{ChatColors.White}]" +
                                                                    $" [{FormatSpeedDifferenceFromString(currentSpeed, previousStageSpeed)}u/s{ChatColors.White}]" +
                                                                    $" {(previousStageSpeed != srStageSpeed ? $"[SR {FormatSpeedDifferenceFromString(currentSpeed, srStageSpeed)}u/s{ChatColors.White}]" : "")}");
+                            } else {
+                                PrintToChat(player, $"Time: {ChatColors.White}[{primaryChatColor}{formattedStageTicks}{ChatColors.White}] " +
+                                                               $" {(previousStageTime != srStageTime ? $"[SR {FormatTimeDifference(playerStageTicks, srStageTime)}{ChatColors.White}]" : "")}");
                             }
 
                             if (playerTimer.StageVelos != null && playerTimer.StageTimes != null && playerTimer.IsTimerRunning == true && IsAllowedPlayer(player))
@@ -296,11 +304,11 @@ namespace SharpTimer
                                 }
                             }
 
-                            playerTimer.CurrentMapStage++;
+                            playerTimer.CurrentMapStage = stageTrigger;
                             playerTimer.StageTicks = 0;
                         }
                     });
-                    
+                            
                     if (playerTimers[player.Slot].currentStyle == 0) await SavePlayerStageTimeToDatabase(player, playerStageTicks, prevStage, currentSpeed, playerSteamID, playerName, playerSlot);
                 }
             }
@@ -370,6 +378,10 @@ namespace SharpTimer
                                     player.PrintToChat($" {Localizer["prefix"]} Speed: {ChatColors.White}[{primaryChatColor}{currentStageSpeed}u/s{ChatColors.White}]" +
                                                                    $" [{FormatSpeedDifferenceFromString(currentStageSpeed, previousStageSpeed)}u/s{ChatColors.White}]" +
                                                                    $" {(previousStageSpeed != srStageSpeed ? $"[SR {FormatSpeedDifferenceFromString(currentStageSpeed, srStageSpeed)}u/s{ChatColors.White}]" : "")}");
+                            } else {
+                                player.PrintToChat($" {Localizer["prefix"]} Checkpoint: {playerTimer.CurrentMapCheckpoint}");
+                                player.PrintToChat($" {Localizer["prefix"]} Time: {ChatColors.White}[{primaryChatColor}{FormatTime(playerTimerTicks)}{ChatColors.White}] " +
+                                                               $" {(previousStageTime != srStageTime ? $"[SR {FormatTimeDifference(playerTimerTicks, srStageTime)}{ChatColors.White}]" : "")}");
                             }
 
                             if (playerTimer.StageVelos != null && playerTimer.StageTimes != null && playerTimer.IsTimerRunning == true && IsAllowedPlayer(player) && playerTimer.currentStyle == 0)

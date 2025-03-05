@@ -69,6 +69,7 @@ namespace SharpTimer
                     playerTimers[playerSlot].SetRespawnAng = null;
                     playerTimers[playerSlot].SoundsEnabled = soundsEnabledByDefault;
                     playerTimers[playerSlot].Prestrafe = false;
+                    playerTimers[playerSlot].CenterSpeed = false;
                     
                     if (isForBot == false) _ = Task.Run(async () => await IsPlayerATester(steamID, playerSlot));
 
@@ -87,7 +88,7 @@ namespace SharpTimer
                     {
                         player.PlayerPawn.Value.Render = Color.FromArgb(254, 254, 254, 254);
                         Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseModelEntity", "m_clrRender");
-                    }
+                    } 
                 }
                 finally
                 {
@@ -148,6 +149,24 @@ namespace SharpTimer
                 {
                     
                     connectedPlayers.Remove(player.Slot);
+
+                    if(WorldTextManager.WorldTextOwners.ContainsValue(player.UserId!.Value)) {
+                        var key = WorldTextManager.WorldTextOwners.FirstOrDefault(kvp => kvp.Value == player.UserId.Value).Key;
+                        if (key != default)
+                        {
+                            if (WorldTextManager.WorldTextEntities.ContainsKey(key))
+                            {
+                                CPointWorldText existingEntity = WorldTextManager.WorldTextEntities[key];
+                                if (existingEntity != null && existingEntity.IsValid)
+                                {
+                                    existingEntity.Remove();
+                                    WorldTextManager.WorldTextEntities.Remove(key);
+                                    WorldTextManager.WorldTextOwners.Remove(key);
+                                }
+                            }
+                        }
+                    }
+
 
                     //schizo removing data from memory
                     playerTimers[player.Slot] = new PlayerTimerInfo();

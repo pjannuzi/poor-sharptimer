@@ -21,6 +21,7 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Admin;
+using System.Drawing;
 
 namespace SharpTimer
 {
@@ -487,6 +488,59 @@ namespace SharpTimer
 
         }
 
+        [ConsoleCommand("css_centerspeed", "Draws/Hides Center Speed")]
+        [ConsoleCommand("css_cspeed", "Draw/Hides Center Speed")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void CenterSpeedCommand(CCSPlayerController? player, CommandInfo command)
+        {
+
+            if (!IsAllowedPlayer(player))
+            {
+                if (!IsAllowedSpectator(player))
+                    return;
+            }
+
+            var playerName = player!.PlayerName;
+            var playerSlot = player.Slot;
+            var steamID = player.SteamID.ToString();
+
+            SharpTimerDebug($"{playerName} calling css_centerspeed...");
+
+            if (CommandCooldown(player))
+                return;
+                
+            playerTimers[playerSlot].TicksSinceLastCmd = 0;
+
+            playerTimers[playerSlot].CenterSpeed = !playerTimers[playerSlot].CenterSpeed;
+
+            if (playerTimers[playerSlot].CenterSpeed)
+            {   
+                WorldTextManager.CreateText(player, "0000", 35, Color.Red);
+                var index = WorldTextManager.RemoveText(player);
+                SharpTimerDebug($"Deleted (dunno) WorldText entity for player {player.PlayerName}, index: {index}");
+                PrintToChat(player, Localizer["centerspeed_hidden"]);
+            }
+            else
+            {   
+                if(!WorldTextManager.hasWorldText(player))
+                    if(!WorldTextManager.hasEntity(player))
+                    {   
+                        WorldTextManager.CreateText(player, "0000", 35, Color.Red);
+                        WorldTextManager.RemoveText(player);
+                        var entity = WorldTextManager.CreateText(player, "0000", 35, Color.Red);
+                        SharpTimerDebug($"Created WorldText entity for player {player.PlayerName}, index: {entity!.Index}");
+                    }
+                PrintToChat(player, Localizer["centerspeed_shown"]);
+            }
+
+            SharpTimerDebug($"Centerspeed HUD set to: {playerTimers[playerSlot].CenterSpeed} for {playerName}");
+
+            // if (enableDb)
+            // {
+            //     _ = Task.Run(async () => await SetPlayerStats(player, steamID, playerName, playerSlot));
+            // }
+        }
+
         [ConsoleCommand("css_sounds", "Toggles Sounds")]
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
         public void SoundsSwitchCommand(CCSPlayerController? player, CommandInfo command)
@@ -593,11 +647,28 @@ namespace SharpTimer
         {
             if (!IsAllowedPlayer(player)) return;
 
-            //HideWeapon(player);
+            if (playerTimers[player!.Slot].HideWeapon)
+            {
+                 playerTimers[player.Slot].HideWeapon = !playerTimers[player.Slot].HideWeapon;
+            } else 
+            {
+                player!.RemoveWeapons();
+            }
+
 
             player!.GiveNamedItem("weapon_decoy");
             PrintToChat(player, Localizer["weapon_decoy"]);
 
+        }
+
+        [ConsoleCommand("css_discord", "Gives the player a decoy")]
+        [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+        public void DiscordCommand(CCSPlayerController? player, CommandInfo command)
+        {
+            if (!IsAllowedPlayer(player)) return;
+
+
+            PrintToChat(player, "Discord: https://discord.gg/uvcChSt83x");
         }
 
         [ConsoleCommand("css_report", "Create a report")]
@@ -1762,6 +1833,7 @@ namespace SharpTimer
             playerTimers[player.Slot].TimerTicks = 0;
             playerTimers[player.Slot].IsBonusTimerRunning = false;
             playerTimers[player.Slot].BonusTimerTicks = 0;
+            playerTimers[player.Slot].IsPracTimerRunning = playerTimers[player.Slot].IsTimerBlocked ? false : true;
 
             if (stageTriggers.Count != 0) playerTimers[player.Slot].StageTimes!.Clear(); //remove previous stage times if the map has stages
             if (stageTriggers.Count != 0) playerTimers[player.Slot].StageVelos!.Clear(); //remove previous stage times if the map has stages

@@ -110,12 +110,14 @@ namespace SharpTimer
     {
         //timer
         public bool IsTimerRunning { get; set; }
+        public bool IsPracTimerRunning { get; set; }
         public int AFKTicks { get; set; }
         public bool AFKWarned { get; set; }
         public bool IsOnBhopBlock { get; set; }
         public bool IsNoclip { get; set; }
         public bool IsTimerBlocked { get; set; }
         public int TimerTicks { get; set; }
+        public int PracTimerTicks { get; set; }
         public List<int> PrevTimerTicks { get; set; } = new();
         public int StageTicks { get; set; }
         public bool IsBonusTimerRunning { get; set; }
@@ -167,6 +169,7 @@ namespace SharpTimer
         public bool Azerty { get; set; }
         public bool HideTimerHud { get; set; }
         public bool HideKeys { get; set; }
+        public bool CenterSpeed { get; set; }
         public bool HidePlayers { get; set; }
         public bool HideWeapon { get; set; }
         public bool GivenWeapon { get; set; }
