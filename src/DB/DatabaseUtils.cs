@@ -785,7 +785,6 @@ namespace SharpTimer
                             if (enableDb && IsAllowedPlayer(player)) await RankCommandHandler(player, steamId, playerSlot, playerName, true, style);
                             if (globalRanksEnabled == true) await SavePlayerPoints(steamId, playerName, playerSlot, timerTicks, dBtimerTicks, beatPB, bonusX, style, dBtimesFinished);
                             if (IsAllowedPlayer(player)) Server.NextFrame(() => _ = Task.Run(async () => await PrintMapTimeToChat(player!, steamId, playerName, dBtimerTicks, timerTicks, bonusX, dBtimesFinished, style, prevSR)));
-                    
                             Server.NextFrame(async () =>
                             {
                                 var (hostname, ip) = GetHostnameAndIp();
@@ -1731,12 +1730,10 @@ namespace SharpTimer
                             selectCommand = null;
                             break;
                     }
-
                     using (selectCommand)
                     {
                         if (import)
                             selectCommand!.CommandTimeout = 120;
-                        
                         selectCommand!.AddParameterWithValue("@SteamID", steamId);
 
                         var row = await selectCommand!.ExecuteReaderAsync();
@@ -1760,9 +1757,7 @@ namespace SharpTimer
                                     playerPoints = row.GetInt32("GlobalPoints");
                                     break;
                             }
-
                             int newPoints = await CalculatePlayerPoints(steamId, playerName, timerTicks, oldTicks, beatPB, bonusX, style, completions, mapname, false) + playerPoints;
-
                             await row.CloseAsync();
                             // Update or insert the record
 
@@ -1771,7 +1766,7 @@ namespace SharpTimer
                             switch (dbType)
                             {
                                 case DatabaseType.MySQL:
-                                    upsertQuery = $@"REPLACE INTO {PlayerStatsTable} (PlayerName, SteamID, TimesConnected, LastConnected, HideTimerHud, HideKeys, HideJS, SoundsEnabled, Prestrafe, PlayerFov, IsVip, BigGifID, GlobalPoints, HideWeapon, HidePlayers, CenterSpeed) VALUES (@PlayerName, @SteamID, @TimesConnected, @LastConnected, @HideTimerHud, @HideKeys, @HideJS, @SoundsEnabled, @PlayerFov, @IsVip, @BigGifID, @GlobalPoints, @HideWeapon, @HidePlayers, @CenterSpeed)";
+                                    upsertQuery = $@"REPLACE INTO {PlayerStatsTable} (PlayerName, SteamID, TimesConnected, LastConnected, HideTimerHud, HideKeys, HideJS, SoundsEnabled, Prestrafe, PlayerFov, IsVip, BigGifID, GlobalPoints, HideWeapon, HidePlayers, CenterSpeed) VALUES (@PlayerName, @SteamID, @TimesConnected, @LastConnected, @HideTimerHud, @HideKeys, @HideJS, @SoundsEnabled, @PlayerFov, @Prestrafe, @IsVip, @BigGifID, @GlobalPoints, @HideWeapon, @HidePlayers, @CenterSpeed)";
                                     upsertCommand = new MySqlCommand(upsertQuery, (MySqlConnection)connection);
                                     break;
                                 case DatabaseType.PostgreSQL:
@@ -1915,12 +1910,11 @@ namespace SharpTimer
         }
 
         public async Task<int> CalculatePlayerPoints(string steamId, string playerName, int timerTicks, int oldTicks, bool beatPB = false, int bonusX = 0, int style = 0, int completions = 0, string mapname = "", bool forGlobal = false)
-        {
+        {   
             SharpTimerDebug($"Trying to calculate player points for {playerName}");
             try
             {
                 if (mapname == "") mapname = currentMapName!;
-
                 double newPoints;
 
                 // First calculate basic map completion points based on tier
@@ -1935,7 +1929,6 @@ namespace SharpTimer
 
                 // Then calculate max points based on **map total** times finished
                 double maxPoints = await CalculateTier(sortedRecords.Count, mapname);
-
 
                 int rank = 1;
                 bool isTop10 = false;
@@ -1965,7 +1958,6 @@ namespace SharpTimer
                 {
                     newPoints += CalculateGroups(maxPoints, await GetPlayerMapPercentile(steamId, playerName, mapname, bonusX, style, forGlobal, timerTicks), forGlobal);
                 }
-
                 // if for global points, zero out style and bonus points
                 if (forGlobal)
                 {
@@ -1984,7 +1976,6 @@ namespace SharpTimer
                 // Apply bonus multiplier if bonus completion
                 if (bonusX != 0)
                     newPoints *= globalPointsBonusMultiplier;
-
                 // Hastily round the new points to prevent 123.4567890123456789 points
                 newPoints = Math.Round(newPoints);
 
@@ -1995,7 +1986,6 @@ namespace SharpTimer
                 // 0 completions is an easy identifier for importpoints
                 if (completions == 0)
                     return (int)newPoints;
-
                 // Zero out new points if player has exceeded max completions and has not set a pb
                 if (globalPointsMaxCompletions > 0 && await PlayerCompletions(steamId, bonusX, style) > globalPointsMaxCompletions && !beatPB)
                     newPoints = 0;
