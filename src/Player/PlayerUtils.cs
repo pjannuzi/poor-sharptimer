@@ -549,7 +549,8 @@ namespace SharpTimer
                 if (newSR)
                 {
                     if (prevSR != 0)
-                    {
+                    {   
+                        timeDifferenceNoCol = FormatTimeDifference(newticks, prevSR, true);
                         timeDifference = $"[{FormatTimeDifference(newticks, prevSR)}{ChatColors.White}] ";
                     }
                     if (bonusX != 0) PrintToChatAll(Localizer["new_server_record_bonus", playerName, bonusX]);

@@ -147,22 +147,22 @@ namespace SharpTimer
 
                 var fields = new List<object>();
 
-                if (!string.IsNullOrEmpty(currentMapName))
-                {
-                    fields.Add(new
-                    {
-                        name = "🗺️ Map:",
-                        value = $"{(bonusX == 0 ? currentMapName : $"{currentMapName} bonus #{bonusX}")}",
-                        inline = true
-                    });
-                }
+                // if (!string.IsNullOrEmpty(currentMapName))
+                // {
+                //     fields.Add(new
+                //     {
+                //         name = "Map:",
+                //         value = $"{(bonusX == 0 ? currentMapName : $"{currentMapName} bonus #{bonusX}")}",
+                //         inline = true
+                //     });
+                // }
 
-                if (discordWebhookTier && currentMapTier != null)
+                if (discordWebhookSteamLink && !string.IsNullOrEmpty(steamID))
                 {
                     fields.Add(new
                     {
-                        name = "🔰 Tier:",
-                        value = currentMapTier,
+                        name = "Player:",
+                        value = $"[{playerName}](https://steamcommunity.com/profiles/{steamID})",
                         inline = true
                     });
                 }
@@ -171,67 +171,59 @@ namespace SharpTimer
                 {
                     fields.Add(new
                     {
-                        name = "⌛ Time:",
-                        value = runTime,
+                        name = "Time:",
+                        value = !string.IsNullOrEmpty(timeDifference) ? $"{runTime} ({timeDifference})" : runTime,
                         inline = true
                     });
                 }
 
-                if (discordWebhookTimeChange && !isFirstTime)
+                if (discordWebhookTier && currentMapTier != null)
                 {
                     fields.Add(new
                     {
-                        name = "⏳ Time change:",
-                        value = timeDifference,
+                        name = "Map Tier:",
+                        value = currentMapTier,
                         inline = true
                     });
                 }
 
-                if (discordWebhookPlacement && !string.IsNullOrEmpty(placement))
-                {
-                    fields.Add(new
-                    {
-                        name = "🎖️ Placement:",
-                        value = $"#{placement}",
-                        inline = true
-                    });
-                }
+                // if (discordWebhookPlacement && !string.IsNullOrEmpty(placement))
+                // {
+                //     fields.Add(new
+                //     {
+                //         name = "🎖️ Placement:",
+                //         value = $"#{placement}",
+                //         inline = true
+                //     });
+                // }
 
-                if (discordWebhookTimesFinished)
-                {
-                    fields.Add(new
-                    {
-                        name = "🔢 Times Finished:",
-                        value = $"{(!isFirstTime ? timesFinished : "First time!")}",
-                        inline = true
-                    });
-                }
+                // if (discordWebhookTimesFinished)
+                // {
+                //     fields.Add(new
+                //     {
+                //         name = "🔢 Times Finished:",
+                //         value = $"{(!isFirstTime ? timesFinished : "First time!")}",
+                //         inline = true
+                //     });
+                // }
 
-                if (discordWebhookSteamLink && !string.IsNullOrEmpty(steamID))
-                {
-                    fields.Add(new
-                    {
-                        name = "🛈 SteamID:",
-                        value = $"[Profile](https://steamcommunity.com/profiles/{steamID})",
-                        inline = true
-                    });
-                }
+                
 
-                if (!discordWebhookDisableStyleRecords && !string.IsNullOrEmpty(style))
-                {
-                    fields.Add(new
-                    {
-                        name = "🛹 Style:",
-                        value = style,
-                        inline = true
-                    });
-                }
+                // if (!discordWebhookDisableStyleRecords && !string.IsNullOrEmpty(style))
+                // {
+                //     fields.Add(new
+                //     {
+                //         name = "🛹 Style:",
+                //         value = style,
+                //         inline = true
+                //     });
+                // }
 
                 var spacedFields = new List<object>();
                 for (int i = 0; i < fields.Count; i++)
                 {
                     spacedFields.Add(fields[i]);
-                    if ((i + 1) % 2 == 0 && i != fields.Count - 1)
+                    if ((i + 1) % 3 == 0 && i != fields.Count - 1)
                     {
                         spacedFields.Add(new
                         {
@@ -241,21 +233,21 @@ namespace SharpTimer
                         });
                     }
                 }
-                if (fields.Count % 2 == 0)
-                {
-                    spacedFields.Add(new
-                    {
-                        name = "\u200B",
-                        value = "\u200B",
-                        inline = true
-                    });
-                }
+                // if (fields.Count % 3 == 0)
+                // {
+                //     spacedFields.Add(new
+                //     {
+                //         name = "\u200B",
+                //         value = "\u200B",
+                //         inline = true
+                //     });
+                // }
 
                 var embed = new Dictionary<string, object>
                 {
-                    { "title", !isSR ? $"set a new Personal Best!" : $"set a new Server Record!" },
+                    { "title", !isSR ? $"set a new Personal Best!" : $"New server record | {(bonusX == 0 ? currentMapName : $"{currentMapName} b{bonusX}")} - {style}" },
                     { "fields", spacedFields.ToArray() },
-                    { "author", new { name = $"{playerName}", url = $"https://steamcommunity.com/profiles/{steamID}" } },
+                    //{ "author", new { name = $"{playerName}", url = $"https://steamcommunity.com/profiles/{steamID}" } },
                     { "footer", new { text = discordWebhookFooter, icon_url = discordWebhookPFPUrl } },
                     { "image", new { url = mapImg } }
                 };
