@@ -268,6 +268,9 @@ namespace SharpTimer
                     if (enableDb && playerTimers.ContainsKey(player.Slot) && player.DesiredFOV != (uint)playerTimers[player.Slot].PlayerFov)
                     {
                         SharpTimerDebug($"{player.PlayerName} has wrong PlayerFov {player.DesiredFOV}... SetFov to {(uint)playerTimers[player.Slot].PlayerFov}");
+                        if (playerTimers[player.Slot].PlayerFov == 1) {
+                            playerTimers[player.Slot].PlayerFov = 0;
+                        }
                         SetFov(player, playerTimers[player.Slot].PlayerFov, true);
                     }
                 });
