@@ -38,22 +38,10 @@ namespace SharpTimer
     {
         public async Task<IDbConnection> OpenConnectionAsync()
         {
-            IDbConnection? connection = null;
-            switch (dbType)
-            {
-                case DatabaseType.MySQL:
-                    connection = new MySqlConnection(await GetConnectionStringFromConfigFile());
-                    await (connection as MySqlConnection)!.OpenAsync();
-                    break;
-                case DatabaseType.PostgreSQL:
-                    connection = new NpgsqlConnection(await GetConnectionStringFromConfigFile());
-                    await (connection as NpgsqlConnection)!.OpenAsync();
-                    break;
-                case DatabaseType.SQLite:
-                    connection = new SQLiteConnection(await GetConnectionStringFromConfigFile());
-                    await (connection as SQLiteConnection)!.OpenAsync();
-                    break;
-            }
+
+            IDbConnection connection = new MySqlConnection(await GetConnectionStringFromConfigFile());
+            await (connection as MySqlConnection)!.OpenAsync();
+
             if (connection!.State != ConnectionState.Open)
             {
                 useMySQL = false;
@@ -62,24 +50,13 @@ namespace SharpTimer
             }
             return connection;
         }
+
         public IDbConnection OpenConnection()
         {
-            IDbConnection? connection = null;
-            switch (dbType)
-            {
-                case DatabaseType.MySQL:
-                    connection = new MySqlConnection(GetConnectionStringOnMainThread());
-                    (connection as MySqlConnection)!.Open();
-                    break;
-                case DatabaseType.PostgreSQL:
-                    connection = new NpgsqlConnection(GetConnectionStringOnMainThread());
-                    (connection as NpgsqlConnection)!.Open();
-                    break;
-                case DatabaseType.SQLite:
-                    connection = new SQLiteConnection(GetConnectionStringOnMainThread());
-                    (connection as SQLiteConnection)!.Open();
-                    break;
-            }
+
+            IDbConnection connection = new MySqlConnection(GetConnectionStringOnMainThread());
+            (connection as MySqlConnection)!.Open();
+            
             if (connection!.State != ConnectionState.Open)
             {
                 useMySQL = false;
@@ -88,303 +65,169 @@ namespace SharpTimer
             }
             return connection;
         }
+
+        private static string DefaultConnectionString()
+        {
+            return "Server=localhost;Database=database;User ID=root;Password=root;Port=3306;";
+        }
+
+        private static string GetStringProperty(JsonElement root, string propertyName, string defaultValue)
+        {
+            return root.TryGetProperty(propertyName, out var property) ? property.GetString() ?? defaultValue : defaultValue;
+        }
+
+        private static int GetIntProperty(JsonElement root, string propertyName, int defaultValue)
+        {
+            return root.TryGetProperty(propertyName, out var property) ? property.GetInt32() : defaultValue;
+        }
+
         private string GetConnectionStringOnMainThread()
         {
             try
             {
-                if (dbType.Equals(DatabaseType.SQLite))
+                using (JsonDocument? jsonConfig = LoadJsonOnMainThread(dbPath)!)
                 {
-                    return $"Data Source={dbPath}";
-                }
-                else
-                {
-                    using (JsonDocument? jsonConfig = LoadJsonOnMainThread(dbPath)!)
+                    if (jsonConfig == null)
                     {
-                        if (jsonConfig != null)
-                        {
-                            JsonElement root = jsonConfig.RootElement;
-
-                            string host = root.TryGetProperty("Host", out var hostProperty) ? hostProperty.GetString()! : "localhost";
-                            string database = root.TryGetProperty("Database", out var databaseProperty) ? databaseProperty.GetString()! : "database";
-                            string username = root.TryGetProperty("Username", out var usernameProperty) ? usernameProperty.GetString()! : "root";
-                            string password = root.TryGetProperty("Password", out var passwordProperty) ? passwordProperty.GetString()! : "root";
-                            int port = root.TryGetProperty("Port", out var portProperty) ? portProperty.GetInt32()! : 3306;
-                            string tableprefix = root.TryGetProperty("TablePrefix", out var tableprefixProperty) ? tableprefixProperty.GetString()! : "";
-
-                            PlayerStatsTable = $"{(tableprefix != "" ? $"PlayerStats_{tableprefix}" : "PlayerStats")}";
-
-                            if (dbType.Equals(DatabaseType.MySQL))
-                            {
-                                int timeout = root.TryGetProperty("Timeout", out var timeoutProperty) ? timeoutProperty.GetInt32()! : 30;
-                                return $"Server={host};Database={database};User ID={username};Password={password};Port={port};CharSet=utf8mb4;Connection Timeout={timeout};";
-                            }
-                            else if (dbType.Equals(DatabaseType.PostgreSQL))
-                            {
-                                return $"Server={host};Database={database};User ID={username};Password={password};Port={port};SslMode=Require";
-                            }
-                            else if (dbType.Equals(DatabaseType.SQLite))
-                            {
-                                return $"Data Source={dbPath}";
-                            }
-                            else
-                            {
-                                SharpTimerError($"Database type not supported");
-                            }
-                        }
-                        else
-                        {
-                            SharpTimerError($"Database json was null");
-                        }
+                        SharpTimerError("Database json was null");
+                        return DefaultConnectionString();
                     }
+                    
+                    JsonElement root = jsonConfig.RootElement;
+
+                    string host = GetStringProperty(root, "Host", "localhost");
+                    string database = GetStringProperty(root, "Database", "database");
+                    string username = GetStringProperty(root, "Username", "root");
+                    string password = GetStringProperty(root, "Password", "root");
+                    int port = GetIntProperty(root, "Port", 3306);
+                    int timeout = GetIntProperty(root, "Timeout", 30);
+                    string tableprefix = GetStringProperty(root, "TablePrefix", "");
+
+                    PlayerStatsTable = string.IsNullOrEmpty(tableprefix) ? "PlayerStats" : $"PlayerStats_{tableprefix}";
+
+                    return $"Server={host};Database={database};User ID={username};Password={password};Port={port};CharSet=utf8mb4;Connection Timeout={timeout};";
                 }
             }
             catch (Exception ex)
             {
                 SharpTimerError($"Error in GetConnectionString: {ex.Message}");
             }
-            return "Server=localhost;Database=database;User ID=root;Password=root;Port=3306;";
+            return DefaultConnectionString();
         }
+
         private async Task<string> GetConnectionStringFromConfigFile()
         {
             try
             {
-                if (dbType.Equals(DatabaseType.SQLite))
+                using (JsonDocument? jsonConfig = await LoadJson(dbPath)!)
                 {
-                    return $"Data Source={dbPath}";
-                }
-                else
-                {
-                    using (JsonDocument? jsonConfig = await LoadJson(dbPath)!)
+                    if (jsonConfig == null)
                     {
-                        if (jsonConfig != null)
-                        {
-                            JsonElement root = jsonConfig.RootElement;
-
-                            string host = root.TryGetProperty("Host", out var hostProperty) ? hostProperty.GetString()! : "localhost";
-                            string database = root.TryGetProperty("Database", out var databaseProperty) ? databaseProperty.GetString()! : "database";
-                            string username = root.TryGetProperty("Username", out var usernameProperty) ? usernameProperty.GetString()! : "root";
-                            string password = root.TryGetProperty("Password", out var passwordProperty) ? passwordProperty.GetString()! : "root";
-                            int port = root.TryGetProperty("Port", out var portProperty) ? portProperty.GetInt32()! : 3306;
-                            string tableprefix = root.TryGetProperty("TablePrefix", out var tableprefixProperty) ? tableprefixProperty.GetString()! : "";
-
-                            PlayerStatsTable = $"{(tableprefix != "" ? $"PlayerStats_{tableprefix}" : "PlayerStats")}";
-
-                            if (dbType.Equals(DatabaseType.MySQL))
-                            {
-                                int timeout = root.TryGetProperty("Timeout", out var timeoutProperty) ? timeoutProperty.GetInt32()! : 30;
-                                return $"Server={host};Database={database};User ID={username};Password={password};Port={port};CharSet=utf8mb4;Connection Timeout={timeout};";
-                            }
-                            else if (dbType.Equals(DatabaseType.PostgreSQL))
-                            {
-                                return $"Server={host};Database={database};User ID={username};Password={password};Port={port};SslMode=Require";
-                            }
-                            else if (dbType.Equals(DatabaseType.SQLite))
-                            {
-                                return $"Data Source={dbPath}";
-                            }
-                            else
-                            {
-                                SharpTimerError($"Database type not supported");
-                            }
-                        }
-                        else
-                        {
-                            SharpTimerError($"Database json was null");
-                        }
+                        SharpTimerError("Database json was null");
+                        return DefaultConnectionString();
                     }
+                    
+                    JsonElement root = jsonConfig.RootElement;
+
+                    string host = GetStringProperty(root, "Host", "localhost");
+                    string database = GetStringProperty(root, "Database", "database");
+                    string username = GetStringProperty(root, "Username", "root");
+                    string password = GetStringProperty(root, "Password", "root");
+                    int port = GetIntProperty(root, "Port", 3306);
+                    int timeout = GetIntProperty(root, "Timeout", 30);
+                    string tableprefix = GetStringProperty(root, "TablePrefix", "");
+
+                    PlayerStatsTable = string.IsNullOrEmpty(tableprefix) ? "PlayerStats" : $"PlayerStats_{tableprefix}";
+
+                    return $"Server={host};Database={database};User ID={username};Password={password};Port={port};CharSet=utf8mb4;Connection Timeout={timeout};";
                 }
             }
             catch (Exception ex)
             {
                 SharpTimerError($"Error in GetConnectionString: {ex.Message}");
             }
-            return "Server=localhost;Database=database;User ID=root;Password=root;Port=3306;";
+
+            return DefaultConnectionString();
         }
 
         public async Task CheckTablesAsync()
         {
-            string[]? playerRecords;
-            string[]? playerStats;
-            switch (dbType)
-            {
-                case DatabaseType.MySQL:
-                    playerRecords = [       "MapName VARCHAR(255) DEFAULT ''",
-                                                    "SteamID VARCHAR(20) DEFAULT ''",
-                                                    "PlayerName VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT ''",
-                                                    "TimerTicks INT DEFAULT 0",
-                                                    "FormattedTime VARCHAR(255) DEFAULT ''",
-                                                    "UnixStamp INT DEFAULT 0",
-                                                    "LastFinished INT DEFAULT 0",
-                                                    "TimesFinished INT DEFAULT 0",
-                                                    "Style INT DEFAULT 0"
-                                                ];
-                    playerStats = [         "SteamID VARCHAR(20) DEFAULT ''",
-                                                    "PlayerName VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT ''",
-                                                    "TimesConnected INT DEFAULT 0",
-                                                    "LastConnected INT DEFAULT 0",
-                                                    "GlobalPoints INT DEFAULT 0",
-                                                    "HideTimerHud BOOL DEFAULT false",
-                                                    "HideKeys BOOL DEFAULT false",
-                                                    "HideJS BOOL DEFAULT false",
-                                                    "HideWeapon BOOL DEFAULT false",
-                                                    "HidePlayers BOOL DEFAULT false",
-                                                    "CenterSpeed BOOL DEFAULT false",
-                                                    "SoundsEnabled BOOL DEFAULT false",
-                                                    "Prestrafe BOOL DEFAULT false",
-                                                    "PlayerFov INT DEFAULT 0",
-                                                    "IsVip BOOL DEFAULT false",
-                                                    "BigGifID VARCHAR(16) DEFAULT 'x'"
-                                                ];
-                    break;
-                case DatabaseType.PostgreSQL:
-                    playerRecords = [       @"""MapName"" VARCHAR(255) DEFAULT ''",
-                                                    @"""SteamID"" VARCHAR(20) DEFAULT ''",
-                                                    @"""PlayerName"" VARCHAR(32) DEFAULT ''",
-                                                    @"""TimerTicks"" INT DEFAULT 0",
-                                                    @"""FormattedTime"" VARCHAR(255) DEFAULT ''",
-                                                    @"""UnixStamp"" INT DEFAULT 0",
-                                                    @"""LastFinished"" INT DEFAULT 0",
-                                                    @"""TimesFinished"" INT DEFAULT 0",
-                                                    @"""Style"" INT DEFAULT 0"
-                                                ];
-                    playerStats = [         @"""SteamID"" VARCHAR(20) DEFAULT ''",
-                                                    @"""PlayerName"" VARCHAR(32) DEFAULT ''",
-                                                    @"""TimesConnected"" INT DEFAULT 0",
-                                                    @"""LastConnected"" INT DEFAULT 0",
-                                                    @"""GlobalPoints"" INT DEFAULT 0",
-                                                    @"""HideTimerHud"" BOOL DEFAULT false",
-                                                    @"""HideKeys"" BOOL DEFAULT false",
-                                                    @"""HideJS"" BOOL DEFAULT false",
-                                                    @"""HideWeapon"" BOOL DEFAULT false",
-                                                    @"""HidePlayers"" BOOL DEFAULT false",
-                                                    @"""CenterSpeed"" BOOL DEFAULT false",
-                                                    @"""SoundsEnabled"" BOOL DEFAULT true",
-                                                    @"""Prestrafe"" BOOL DEFAULT false",
-                                                    @"""PlayerFov"" INT DEFAULT 0",
-                                                    @"""IsVip"" BOOL DEFAULT false",
-                                                    @"""BigGifID"" VARCHAR(16) DEFAULT 'x'"
-                                                ];
-                    break;
-                case DatabaseType.SQLite:
-                    playerRecords = [       "MapName TEXT DEFAULT ''",
-                                                    "SteamID TEXT DEFAULT ''",
-                                                    "PlayerName TEXT DEFAULT ''",
-                                                    "TimerTicks INT DEFAULT 0",
-                                                    "FormattedTime TEXT DEFAULT ''",
-                                                    "UnixStamp INT DEFAULT 0",
-                                                    "LastFinished INT DEFAULT 0",
-                                                    "TimesFinished INT DEFAULT 0",
-                                                    "Style INT DEFAULT 0"
-                                                ];
-                    playerStats = [         "SteamID TEXT DEFAULT ''",
-                                                    "PlayerName TEXT DEFAULT ''",
-                                                    "TimesConnected INTEGER DEFAULT 0",
-                                                    "LastConnected INTEGER DEFAULT 0",
-                                                    "GlobalPoints INTEGER DEFAULT 0",
-                                                    "HideTimerHud INTEGER DEFAULT 0",
-                                                    "HideKeys INTEGER DEFAULT 0",
-                                                    "HideJS INTEGER DEFAULT 0",
-                                                    "HideWeapon INTEGER DEFAULT 0",
-                                                    "HidePlayers INTEGER DEFAULT 0",
-                                                    "CenterSpeed INTEGER DEFAULT 0",
-                                                    "SoundsEnabled INTEGER DEFAULT 1",
-                                                    "Prestrafe INTEGER DEFAULT 0",
-                                                    "PlayerFov INTEGER DEFAULT 0",
-                                                    "IsVip INTEGER DEFAULT 0",
-                                                    "BigGifID TEXT DEFAULT 'x'"
-                                                ];
-                    break;
-                default:
-                    playerRecords = null;
-                    playerStats = null;
-                    SharpTimerError($"Database type not supported");
-                    break;
-            }
+               
+            string[] playerRecords = [
+                "MapName VARCHAR(255) DEFAULT ''",
+                "SteamID VARCHAR(20) DEFAULT ''",
+                "PlayerName VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT ''",
+                "TimerTicks INT DEFAULT 0",
+                "FormattedTime VARCHAR(255) DEFAULT ''",
+                "UnixStamp INT DEFAULT 0",
+                "LastFinished INT DEFAULT 0",
+                "TimesFinished INT DEFAULT 0",
+                "Style INT DEFAULT 0"
+            ];
+            string[] playerStats = [
+                "SteamID VARCHAR(20) DEFAULT ''",
+                "PlayerName VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT ''",
+                "TimesConnected INT DEFAULT 0",
+                "LastConnected INT DEFAULT 0",
+                "GlobalPoints INT DEFAULT 0",
+                "HideTimerHud BOOL DEFAULT false",
+                "HideKeys BOOL DEFAULT false",
+                "HideJS BOOL DEFAULT false",
+                "HideWeapon BOOL DEFAULT false",
+                "HidePlayers BOOL DEFAULT false",
+                "CenterSpeed BOOL DEFAULT false",
+                "SoundsEnabled BOOL DEFAULT false",
+                "Prestrafe BOOL DEFAULT false",
+                "PlayerFov INT DEFAULT 0",
+                "IsVip BOOL DEFAULT false",
+                "BigGifID VARCHAR(16) DEFAULT 'x'"
+            ];
+
             using (var connection = await OpenConnectionAsync())
             {
                 try
                 {
-                    // Check PlayerRecords
-                    SharpTimerDebug($"Checking PlayerRecords Table...");
+                    SharpTimerDebug($"[DATABASE]: Checking PlayerRecords Table");
                     await CreatePlayerRecordsTableAsync(connection);
                     await UpdateTableColumnsAsync(connection, "PlayerRecords", playerRecords!);
 
-                    // Check PlayerStats
-                    SharpTimerDebug($"Checking PlayerStats Table...");
+                    SharpTimerDebug($"[DATABASE]: Checking PlayerStats Table");
                     await CreatePlayerStatsTableAsync(connection);
                     await UpdateTableColumnsAsync(connection, $"{PlayerStatsTable}", playerStats!);
                 }
                 catch (Exception ex)
                 {
-                    SharpTimerError($"Error in CheckTablesAsync: {ex}");
+                    SharpTimerError($"[DATABASE]: Error in CheckTablesAsync: {ex}");
                 }
             }
         }
+
         private async Task CreatePlayerRecordsTableAsync(IDbConnection connection)
         {
-            DbCommand? createTableCommand;
-            string createTableQuery;
-            switch (dbType)
+            const string createTableQuery = @"
+                CREATE TABLE IF NOT EXISTS PlayerRecords (
+                MapName VARCHAR(255),
+                SteamID VARCHAR(20),
+                PlayerName VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+                TimerTicks INT,
+                FormattedTime VARCHAR(255),
+                UnixStamp INT,
+                TimesFinished INT,
+                LastFinished INT,
+                Style INT,
+                PRIMARY KEY (MapName, SteamID, Style)
+            )";
+
+            try
             {
-                case DatabaseType.MySQL:
-                    createTableQuery = @"CREATE TABLE IF NOT EXISTS PlayerRecords (
-                                            MapName VARCHAR(255),
-                                            SteamID VARCHAR(20),
-                                            PlayerName VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-                                            TimerTicks INT,
-                                            FormattedTime VARCHAR(255),
-                                            UnixStamp INT,
-                                            TimesFinished INT,
-                                            LastFinished INT,
-                                            Style INT,
-                                            PRIMARY KEY (MapName, SteamID, Style)
-                                        )";
-                    createTableCommand = new MySqlCommand(createTableQuery, (MySqlConnection)connection);
-                    break;
-                case DatabaseType.PostgreSQL:
-                    createTableQuery = @"CREATE TABLE IF NOT EXISTS ""PlayerRecords"" (
-                                            ""MapName"" VARCHAR(255),
-                                            ""SteamID"" VARCHAR(20),
-                                            ""PlayerName"" VARCHAR(32),
-                                            ""TimerTicks"" INT,
-                                            ""FormattedTime"" VARCHAR(255),
-                                            ""UnixStamp"" INT,
-                                            ""TimesFinished"" INT,
-                                            ""LastFinished"" INT,
-                                            ""Style"" INT,
-                                            PRIMARY KEY (""MapName"", ""SteamID"", ""Style"")
-                                        )";
-                    createTableCommand = new NpgsqlCommand(createTableQuery, (NpgsqlConnection)connection);
-                    break;
-                case DatabaseType.SQLite:
-                    createTableQuery = @"CREATE TABLE IF NOT EXISTS PlayerRecords (
-                                            MapName TEXT,
-                                            SteamID TEXT,
-                                            PlayerName TEXT,
-                                            TimerTicks INT,
-                                            FormattedTime TEXT,
-                                            UnixStamp INT,
-                                            TimesFinished INT,
-                                            LastFinished INT,
-                                            Style INT,
-                                            PRIMARY KEY (MapName, SteamID, Style)
-                                        )";
-                    createTableCommand = new SQLiteCommand(createTableQuery, (SQLiteConnection)connection);
-                    break;
-                default:
-                    createTableCommand = null;
-                    break;
+                using (var command = new MySqlCommand(createTableQuery, (MySqlConnection)connection))
+                {
+                    await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                }
             }
-            using (createTableCommand)
+            catch (Exception ex)
             {
-                try
-                {
-                    await createTableCommand!.ExecuteNonQueryAsync();
-                }
-                catch (Exception ex)
-                {
-                    SharpTimerError($"Error in CreatePlayerRecordsTableAsync: {ex.Message}");
-                }
+                SharpTimerError($"Error in CreatePlayerRecordsTableAsync: {ex.Message}");
             }
         }
         private async Task UpdateTableColumnsAsync(IDbConnection connection, string tableName, string[] columns)
@@ -404,26 +247,9 @@ namespace SharpTimer
         }
         private async Task<bool> TableExistsAsync(IDbConnection connection, string tableName)
         {
-            DbCommand? command;
-            string query;
-            switch (dbType)
-            {
-                case DatabaseType.MySQL:
-                    query = $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '{connection.Database}' AND table_name = '{tableName}'";
-                    command = new MySqlCommand(query, (MySqlConnection)connection);
-                    break;
-                case DatabaseType.PostgreSQL:
-                    query = $@"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '""{tableName}""'";
-                    command = new NpgsqlCommand(query, (NpgsqlConnection)connection);
-                    break;
-                case DatabaseType.SQLite:
-                    query = $"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = '{tableName}'";
-                    command = new SQLiteCommand(query, (SQLiteConnection)connection);
-                    break;
-                default:
-                    command = null;
-                    break;
-            }
+            string query = $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '{connection.Database}' AND table_name = '{tableName}'";
+            DbCommand command = new MySqlCommand(query, (MySqlConnection)connection);
+
             using (command)
             {
                 try
@@ -440,26 +266,9 @@ namespace SharpTimer
         }
         private async Task<bool> ColumnExistsAsync(IDbConnection connection, string tableName, string columnName)
         {
-            DbCommand? command;
-            string query;
-            switch (dbType)
-            {
-                case DatabaseType.MySQL:
-                    query = $"SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '{connection.Database}' AND table_name = '{tableName}' AND column_name = '{columnName}'";
-                    command = new MySqlCommand(query, (MySqlConnection)connection);
-                    break;
-                case DatabaseType.PostgreSQL:
-                    query = $@"SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{tableName}' AND column_name = '{columnName}'";
-                    command = new NpgsqlCommand(query, (NpgsqlConnection)connection);
-                    break;
-                case DatabaseType.SQLite:
-                    query = $"PRAGMA table_info({tableName})";
-                    command = new SQLiteCommand(query, (SQLiteConnection)connection);
-                    break;
-                default:
-                    command = null;
-                    break;
-            }
+            string query = $"SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '{connection.Database}' AND table_name = '{tableName}' AND column_name = '{columnName}'";
+            DbCommand command = new MySqlCommand(query, (MySqlConnection)connection);     
+            
             using (command)
             {
                 if (dbType == DatabaseType.SQLite)
